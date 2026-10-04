@@ -21,11 +21,11 @@ jobs:
     name: Build the website
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install Rust
         shell: bash
         run: rustup toolchain install stable --profile minimal --target wasm32-unknown-unknown && rustup default stable
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
       - run: sh web/build.sh
@@ -33,7 +33,7 @@ jobs:
       - run: node site/build.mjs
         env:
           LESSGIF_BASE_URL: ${{ vars.SITE_URL }}
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: site/dist
 
@@ -43,7 +43,7 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && vars.CLOUDFLARE_PROJECT != ''
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: github-pages
       - run: mkdir dist && tar -xf artifact.tar -C dist
@@ -72,4 +72,4 @@ jobs:
       url: ${{ steps.deploy.outputs.page_url }}
     steps:
       - id: deploy
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

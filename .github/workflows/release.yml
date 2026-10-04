@@ -26,7 +26,7 @@ jobs:
           - { os: ubuntu-24.04-arm, target: aarch64-unknown-linux-musl }
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install Rust
         shell: bash
         run: |
@@ -73,7 +73,7 @@ jobs:
             cp target/${{ matrix.target }}/release/lessgif "$name/"
             tar czf "$name.tar.gz" "$name"
           fi
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.target }}
           path: |
@@ -84,7 +84,7 @@ jobs:
     name: Browser build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install Rust
         shell: bash
         run: rustup toolchain install stable --profile minimal --target wasm32-unknown-unknown && rustup default stable
@@ -94,7 +94,7 @@ jobs:
           mkdir lessgif-wasm
           cp web/lessgif.js web/lessgif.wasm LICENSE-MIT LICENSE-APACHE lessgif-wasm/
           zip -r lessgif-wasm.zip lessgif-wasm
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: wasm
           path: lessgif-wasm.zip
@@ -109,7 +109,7 @@ jobs:
       id-token: write # sign the build record
       attestations: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           path: dist
           merge-multiple: true
@@ -120,7 +120,7 @@ jobs:
         # Anyone can check a download with: gh attestation verify <file> --repo <owner>/lessgif
         # GitHub keeps these records for public repositories only.
         if: ${{ !github.event.repository.private }}
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: dist/*
       - name: Create the release
