@@ -341,7 +341,9 @@ fn open_source(o: &Opts, fps: f64, max_side: usize) -> Source {
 /// colour into the edges of what's visible.
 fn resize_rgba(rgba: &[u8], w: usize, h: usize, nw: usize, nh: usize) -> Vec<u8> {
     let pre: Vec<u8> = rgba
-        .chunks_exact(4)
+        .as_chunks::<4>()
+        .0
+        .iter()
         .flat_map(|c| {
             let a = c[3] as u32;
             [(c[0] as u32 * a / 255) as u8, (c[1] as u32 * a / 255) as u8, (c[2] as u32 * a / 255) as u8, c[3]]
@@ -350,7 +352,9 @@ fn resize_rgba(rgba: &[u8], w: usize, h: usize, nw: usize, nh: usize) -> Vec<u8>
     let img = image::RgbaImage::from_raw(w as u32, h as u32, pre).unwrap();
     let r = image::imageops::resize(&img, nw as u32, nh as u32, image::imageops::FilterType::Lanczos3);
     r.into_raw()
-        .chunks_exact(4)
+        .as_chunks::<4>()
+        .0
+        .iter()
         .flat_map(|c| {
             let a = c[3] as u32;
             if a == 0 {

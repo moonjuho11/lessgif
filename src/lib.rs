@@ -488,11 +488,11 @@ impl PaletteBuilder {
         assert_eq!(rgba.len(), w * h * 4);
         self.dims.get_or_insert((w, h));
         self.frames += 1;
-        if !self.has_clear && rgba.chunks_exact(4).any(|c| c[3] < 128) {
+        if !self.has_clear && rgba.as_chunks::<4>().0.iter().any(|c| c[3] < 128) {
             self.has_clear = true;
         }
         if !self.census.overflow {
-            for c in rgba.chunks_exact(4) {
+            for c in rgba.as_chunks::<4>().0 {
                 if c[3] >= 128 {
                     self.census.add((c[0] as u32) << 16 | (c[1] as u32) << 8 | c[2] as u32);
                     if self.census.overflow {
@@ -701,7 +701,7 @@ fn frame_census(rgba: &[u8], cap: usize) -> Option<Vec<(u32, u32)>> {
     let mut keys = [EMPTY; SLOTS];
     let mut counts = [0u32; SLOTS];
     let mut n = 0;
-    for c in rgba.chunks_exact(4) {
+    for c in rgba.as_chunks::<4>().0 {
         if c[3] < 128 {
             continue;
         }
@@ -1438,7 +1438,7 @@ impl<W: Write> Encoder<W> {
         // only what changed, with that frame's palette)
         let fresh = first || self.prev_src.len() != rgba.len();
         let mut chg = Vec::new();
-        for (i, c) in rgba.chunks_exact(4).enumerate() {
+        for (i, c) in rgba.as_chunks::<4>().0.iter().enumerate() {
             if c[3] >= 128 && (fresh || (self.alpha && self.clear[i]) || *c != self.prev_src[i * 4..i * 4 + 4]) {
                 chg.extend_from_slice(c);
             }
@@ -1467,8 +1467,8 @@ impl<W: Write> Encoder<W> {
         if rgba.len() != w * h * 4 {
             return Err(std::io::Error::new(std::io::ErrorKind::InvalidInput, "frame size changed mid-stream"));
         }
-        let src: Vec<Rgb> = rgba.chunks_exact(4).map(|c| [c[0] as f32, c[1] as f32, c[2] as f32]).collect();
-        let tclear: Option<Vec<bool>> = self.alpha.then(|| rgba.chunks_exact(4).map(|c| c[3] < 128).collect());
+        let src: Vec<Rgb> = rgba.as_chunks::<4>().0.iter().map(|c| [c[0] as f32, c[1] as f32, c[2] as f32]).collect();
+        let tclear: Option<Vec<bool>> = self.alpha.then(|| rgba.as_chunks::<4>().0.iter().map(|c| c[3] < 128).collect());
         let first = self.stats.frames_in == 0;
         self.stats.frames_in += 1;
         // Alpha: a pixel that must turn transparent can only be cleared by disposing the previous

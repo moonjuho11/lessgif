@@ -184,7 +184,7 @@ fn decode(gif: &[u8]) -> Vec<(Vec<u8>, u32)> {
             let (n, d) = f.delay().numer_denom_ms();
             let cs = (n as f64 / d as f64 / 10.0).round() as u32;
             let mut px = f.into_buffer().into_raw();
-            for p in px.chunks_exact_mut(4) {
+            for p in px.as_chunks_mut::<4>().0 {
                 if p[3] == 0 {
                     p.copy_from_slice(&[0, 0, 0, 0]);
                 }
@@ -200,7 +200,7 @@ fn intended(dump: &[u8], c: &Clip, alpha: bool) -> Vec<Vec<u8>> {
     if alpha {
         dump.chunks_exact(px * 4).map(|f| f.to_vec()).collect()
     } else {
-        dump.chunks_exact(px * 3).map(|f| f.chunks_exact(3).flat_map(|p| [p[0], p[1], p[2], 255]).collect()).collect()
+        dump.chunks_exact(px * 3).map(|f| f.as_chunks::<3>().0.iter().flat_map(|p| [p[0], p[1], p[2], 255]).collect()).collect()
     }
 }
 
@@ -282,9 +282,9 @@ fn quality_100_is_lossless_when_frames_fit_a_palette() {
         let mut at = 0;
         for (src, d) in c.frames.iter().zip(&c.delays) {
             let k = starts.iter().rposition(|&s| s <= at).unwrap();
-            for (i, (g, s)) in got[k].0.chunks_exact(4).zip(src.chunks_exact(4)).enumerate() {
+            for (i, (g, s)) in got[k].0.as_chunks::<4>().0.iter().zip(src.as_chunks::<4>().0).enumerate() {
                 let want = if s[3] < 128 { [0, 0, 0, 0] } else { [s[0], s[1], s[2], 255] };
-                assert_eq!(g, want, "{}: pixel {i} at {at} cs", c.name);
+                assert_eq!(*g, want, "{}: pixel {i} at {at} cs", c.name);
             }
             at += d;
         }
