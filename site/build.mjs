@@ -33,6 +33,9 @@ const NAV = [
   ['speed/', 'Speed'],
   ['reverse/', 'Reverse'],
   ['rotate/', 'Rotate'],
+  ['add-text/', 'Add text'],
+  ['split/', 'Split'],
+  ['gif-to-mp4/', 'GIF to MP4'],
 ];
 
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');

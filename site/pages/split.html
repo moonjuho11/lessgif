@@ -1,0 +1,32 @@
+<!-- {"path": "split/", "script": "split",
+  "title": "Split GIF into frames: GIF to PNG or JPG | lessgif",
+  "description": "Split an animated GIF into its frames and download them as PNG or JPG pictures in a ZIP file, or one at a time. Free, private, nothing is uploaded."} -->
+<h1>Split GIF into frames</h1>
+<p class="lead">Get every frame of a GIF as a separate picture: all of them in a ZIP file, or just the ones you click.</p>
+<div id="tool"></div>
+<template id="opts">
+  <div class="field">
+    <span>Frames</span>
+    <small>Click a frame to download just that one.</small>
+    <div class="frames" data-frames></div>
+  </div>
+  <div class="row">
+    <div class="field">
+      <span>Format</span>
+      <div class="seg" role="radiogroup" aria-label="Format">
+        <label><input type="radio" name="format" value="png" checked>PNG</label>
+        <label><input type="radio" name="format" value="jpg">JPG</label>
+      </div>
+    </div>
+    <label class="field"><span>From frame</span><input type="number" name="from" min="1" value="1"></label>
+    <label class="field"><span>To frame</span><input type="number" name="to" min="1" value="1"></label>
+  </div>
+  <p class="hint" data-summary></p>
+</template>
+{{ad:result}}
+<section class="prose faq">
+  <h2>About splitting</h2>
+  <p>Each picture shows the frame the way it looks when the GIF plays, not just the part of it the GIF stores. PNG keeps every pixel and any transparency exactly. JPG files are smaller but slightly blurred, and transparent areas become white.</p>
+  <h3>Can I put the frames back together?</h3>
+  <p>Yes: edit the pictures in any image editor, then drop them on <a href="../maker/">Images to GIF</a>. The file names are numbered, so <b>Sort by file name</b> puts them back in order.</p>
+</section>

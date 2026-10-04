@@ -17,6 +17,9 @@ export const TOOLS = [
   ['speed', 'Speed'],
   ['reverse', 'Reverse'],
   ['rotate', 'Rotate'],
+  ['add-text', 'Add text'],
+  ['split', 'Split into frames'],
+  ['gif-to-mp4', 'Convert to MP4'],
 ];
 
 export function el(tag, attrs = {}, ...kids) {
@@ -37,7 +40,7 @@ export const fmt = {
   loop: (l) => (l === 0 ? 'loops forever' : l == null ? 'plays once' : `repeats ${l} time${l === 1 ? '' : 's'}`),
 };
 
-export const stem = (name) => (name || 'animation').replace(/\.[^.]+$/, '').replace(/-(small|resized|cropped|cut|speed|reversed|rotated)$/, '') || 'animation';
+export const stem = (name) => (name || 'animation').replace(/\.[^.]+$/, '').replace(/-(small|resized|cropped|cut|speed|reversed|rotated|text)$/, '') || 'animation';
 
 // ---------------------------------------------------------------- passing files between tools
 const DB = 'lessgif';
@@ -318,6 +321,46 @@ export function resultBox({ current, verb = 'Made' }) {
   };
 }
 
+// ---------------------------------------------------------------- frame thumbnails
+// Fills box with a button per frame (at most `max`, spread evenly), each with a small picture and
+// the frame's number; onPick(i) gets the number, from 1. The pictures are drawn after it returns.
+let thumbJob = 0;
+export function frameThumbs(box, clip, onPick, max = 400) {
+  box.replaceChildren();
+  const job = ++thumbJob;
+  const n = clip.frames.length;
+  const step = Math.ceil(n / max);
+  const tw = Math.min(120, clip.w);
+  const th = Math.max(1, Math.round((tw * clip.h) / clip.w));
+  let t = 0;
+  for (let i = 0; i < n; i++) {
+    const at = t;
+    t += clip.delays[i];
+    if (i % step) continue;
+    const c = el('canvas', { width: tw, height: th });
+    box.append(el('button', { type: 'button', 'data-i': i + 1, title: `Frame ${i + 1} at ${fmt.secs(at)}, shown for ${clip.delays[i] * 10} ms`, onclick: () => onPick(i + 1) }, c, `${i + 1}`));
+  }
+  (async () => {
+    let full;
+    for (const b of box.children) {
+      if (job !== thumbJob) return;
+      const f = clip.frames[+b.dataset.i - 1];
+      if (!f.byteLength) return; // frames are busy in the encoder; the boxes stay blank
+      const g = b.firstChild.getContext('2d');
+      try {
+        const bmp = await createImageBitmap(new ImageData(f, clip.w, clip.h), { resizeWidth: tw, resizeHeight: th, resizeQuality: 'medium' });
+        g.drawImage(bmp, 0, 0);
+        bmp.close();
+      } catch {
+        // browsers without createImageBitmap resizing: draw full size, then scale
+        full ??= Object.assign(document.createElement('canvas'), { width: clip.w, height: clip.h });
+        full.getContext('2d').putImageData(new ImageData(f, clip.w, clip.h), 0, 0);
+        g.drawImage(full, 0, 0, tw, th);
+      }
+    }
+  })();
+}
+
 // ---------------------------------------------------------------- the GIF tools
 // def: {
 //   current: 'compress',            // this tool's path, left out of "keep editing"
@@ -327,15 +370,18 @@ export function resultBox({ current, verb = 'Made' }) {
 //   keepOriginal: false,            // offer the original when it is smaller
 //   bigPreview: true,               // show the source GIF (tools with their own preview say false)
 //   setup(ui), ops(ui) -> [operations], onChange?(ui)
+//   run?(ui, { progress(text, done, total), signal }) // for tools whose result isn't a GIF: does
+//                                   // the work and shows its own result, in place of ops and the
+//                                   // encoder; output: false leaves out the GIF output settings
 // }
-// ui: { form, clip, file, $(sel), output }
+// ui: { form, clip, file, $(sel), output, host }
 export function gifTool(def) {
   const host = $('#tool');
   const tpl = $('#opts');
   const err = errorBox();
   const prog = progressBox();
-  const result = resultBox({ current: def.current });
-  const output = outputControls({ quality: def.quality ?? 90, sizeTarget: def.sizeTarget, exact: true, keepLoop: true });
+  const result = def.run ? null : resultBox({ current: def.current }); // run() shows its own
+  const output = def.output === false ? null : outputControls({ quality: def.quality ?? 90, sizeTarget: def.sizeTarget, exact: true, keepLoop: true });
 
   const srcImg = el('img', { alt: 'Your GIF' });
   const srcFacts = el('ul', { class: 'facts' });
@@ -346,14 +392,15 @@ export function gifTool(def) {
   const go = el('button', { class: 'btn big', type: 'submit' }, def.verb);
   const form = el('form', { class: 'card opts', hidden: true, novalidate: true });
   if (tpl) form.append(tpl.content.cloneNode(true));
-  form.append(el('h3', {}, 'Output'), output.el, el('div', { class: 'actions' }, go));
+  if (output) form.append(el('h3', {}, 'Output'), output.el);
+  form.append(el('div', { class: 'actions' }, go));
   const drop = dropZone(
     { accept: 'image/gif,image/webp,image/png,image/apng,.gif', title: 'Drop a GIF here', hint: 'Animated WebP and PNG work too. Your file stays on this device.' },
     ([f]) => setSource(f),
   );
-  host.append(drop, err.el, srcCard, form, prog.el, result.el);
+  host.append(drop, err.el, srcCard, form, prog.el, result?.el ?? '');
 
-  const ui = { form, clip: null, file: null, $: (s) => form.querySelector(s), output };
+  const ui = { form, clip: null, file: null, $: (s) => form.querySelector(s), output, host };
   let srcUrl;
 
   async function load(file) {
@@ -367,7 +414,7 @@ export function gifTool(def) {
 
   async function setSource(file) {
     err.hide();
-    result.hide();
+    result?.hide();
     prog.show('Reading the file');
     try {
       const clip = await load(file);
@@ -402,10 +449,26 @@ export function gifTool(def) {
 
   another.onclick = () => drop.querySelector('input').click();
 
+  async function runOwn() {
+    const stop = new AbortController();
+    prog.onCancel = () => stop.abort();
+    go.disabled = true;
+    prog.show('Starting');
+    try {
+      await def.run(ui, { progress: (text, done, total) => prog.show(text, done, total), signal: stop.signal });
+    } catch (x) {
+      if (!stop.signal.aborted) err.show(x.message);
+    } finally {
+      go.disabled = false;
+      prog.hide();
+    }
+  }
+
   form.onsubmit = async (e) => {
     e.preventDefault();
     err.hide();
-    result.hide();
+    result?.hide();
+    if (def.run) return runOwn();
     let ops, out;
     try {
       ops = def.ops(ui);

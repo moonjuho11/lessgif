@@ -1,0 +1,36 @@
+<!-- {"path": "gif-to-mp4/", "script": "gif-to-mp4",
+  "title": "GIF to MP4: convert an animated GIF to video | lessgif",
+  "description": "Convert an animated GIF to an MP4 video for sites and apps that don't take GIFs, usually at a fraction of the size. Keeps every frame's timing. Free, private, in your browser."} -->
+<h1>GIF to MP4</h1>
+<p class="lead">Turn a GIF into an MP4 video, for sites and apps that don't take GIFs. The video is usually much smaller than the GIF.</p>
+<div id="tool"></div>
+<template id="opts">
+  <div class="field">
+    <span>Quality</span>
+    <div class="seg" role="radiogroup" aria-label="Quality">
+      <label><input type="radio" name="q" value="small">Smaller file</label>
+      <label><input type="radio" name="q" value="standard">Standard</label>
+      <label><input type="radio" name="q" value="high" checked>High</label>
+    </div>
+  </div>
+  <div class="field">
+    <span>Play the animation</span>
+    <div class="seg" role="radiogroup" aria-label="Play the animation">
+      <label><input type="radio" name="repeat" value="1" checked>Once</label>
+      <label><input type="radio" name="repeat" value="2">2 times</label>
+      <label><input type="radio" name="repeat" value="3">3 times</label>
+      <label><input type="radio" name="repeat" value="5">5 times</label>
+      <label><input type="radio" name="repeat" value="10">10 times</label>
+    </div>
+    <small>Videos don't always loop the way GIFs do, so a short GIF can be repeated to make a longer video.</small>
+  </div>
+  <label class="field" data-bg><span>Background for transparent parts</span><input type="color" name="bg" value="#ffffff"><small>Videos can't be transparent.</small></label>
+  <p class="hint" data-summary></p>
+</template>
+{{ad:result}}
+<section class="prose faq">
+  <h2>About GIF to MP4</h2>
+  <p>The video uses H.264, the format every phone, browser and social app plays. Each frame keeps its own timing, so the video plays at the same speed as the GIF. A video stores colours far more efficiently than a GIF, so it usually comes out several times smaller, though very sharp pixel art can look a little softer.</p>
+  <h3>Which browsers can do this?</h3>
+  <p>Making the video uses your browser's built-in video encoder: Chrome, Edge and Safari have one for H.264, and so does Firefox on most systems. Where a browser can't make H.264, it makes the MP4 with VP9 instead, which plays in browsers and on most phones but may not be accepted by every app.</p>
+</section>

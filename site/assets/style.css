@@ -62,7 +62,9 @@ pre { background: var(--soft); border: 1px solid var(--line); border-radius: 8px
 .logo .dot { fill: var(--accent); }
 .tools-nav { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; flex: 1; min-width: 0; }
 .tools-nav::-webkit-scrollbar { display: none; }
-.tools-nav a { color: var(--muted); text-decoration: none; padding: 6px 10px; border-radius: 6px; white-space: nowrap; font-size: 0.94rem; }
+.tools-nav a { color: var(--muted); text-decoration: none; padding: 6px 7px; border-radius: 6px; white-space: nowrap; font-size: 0.93rem; }
+/* when the tools don't all fit, fade the right edge so it's clear the bar scrolls */
+@media (max-width: 1220px) { .tools-nav { mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); } }
 .tools-nav a:hover { color: var(--fg); background: var(--soft); }
 .tools-nav a[aria-current] { color: var(--accent); background: var(--accent-soft); font-weight: 600; }
 .dl-link { flex: none; background: var(--accent); color: var(--accent-fg); text-decoration: none; padding: 6px 12px; border-radius: 6px; font-weight: 600; font-size: 0.94rem; }
@@ -139,14 +141,14 @@ body[data-ads=""] main { margin: 0 auto; width: 100%; }
 .field > span { font-weight: 600; font-size: .95rem; }
 .field small, .hint { color: var(--muted); font-size: .88rem; }
 label.inline { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
-input[type=number], input[type=text], select {
+input[type=number], input[type=text], select, textarea {
   font: inherit; color: var(--fg); background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px;
 }
 input[type=number] { width: 6.5em; }
 input[type=range] { width: 100%; max-width: 360px; accent-color: var(--accent); }
 input[type=checkbox], input[type=radio] { accent-color: var(--accent); width: 17px; height: 17px; }
 .range { display: flex; align-items: center; gap: 12px; }
-.range output { min-width: 3.5em; font-variant-numeric: tabular-nums; font-weight: 600; }
+.range output { min-width: 3.5em; font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
 .seg { display: inline-flex; align-self: flex-start; max-width: 100%; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; flex-wrap: wrap; }
 .seg label { padding: 6px 12px; cursor: pointer; border-right: 1px solid var(--line); font-size: .94rem; }
 .seg label:last-child { border-right: 0; }
@@ -234,3 +236,13 @@ th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--lin
 .foot .fine { font-size: .82rem; }
 .cropper canvas { background: repeating-conic-gradient(var(--check) 0 25%, transparent 0 50%) 0 0 / 16px 16px; }
 .thumb input[type=number] { width: 100%; padding: 2px 4px; font-size: .8rem; margin-top: 4px; }
+
+/* add-text tool */
+textarea { width: 100%; max-width: 560px; resize: vertical; line-height: 1.4; }
+input[type=color] { width: 52px; height: 34px; padding: 2px; border: 1px solid var(--line); border-radius: 6px; background: var(--card); cursor: pointer; }
+.texter { position: relative; display: inline-block; touch-action: none; user-select: none; max-width: 100%; line-height: 0; justify-self: start; align-self: start; cursor: move; }
+.texter canvas { max-width: 100%; height: auto; display: block; image-rendering: pixelated; background: repeating-conic-gradient(var(--check) 0 25%, transparent 0 50%) 0 0 / 16px 16px; }
+.texter .tsel { position: absolute; border: 2px dashed #fff; box-shadow: 0 0 0 1px #0009; border-radius: 3px; pointer-events: none; }
+.texter .tsel.off { opacity: .35; }
+.layers { display: flex; flex-wrap: wrap; gap: 6px; }
+.btn.secondary[aria-pressed=true] { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); font-weight: 600; }

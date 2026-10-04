@@ -177,8 +177,8 @@ ready to use as `lessgif-wasm.zip`.
 ## Website
 
 [`site/`](site/) is a complete GIF tool website built on the WebAssembly encoder: video to GIF,
-images to GIF, compress, resize, crop, cut, speed, reverse and rotate, all running in the
-visitor's browser. It is plain HTML, CSS and JavaScript with no framework and no server code.
+images to GIF, compress, resize, crop, cut, speed, reverse, rotate, add text, split into frames
+and GIF to MP4, all running in the visitor's browser. It is plain HTML, CSS and JavaScript with no framework and no server code.
 See [`site/README.md`](site/README.md) for building, testing and hosting it.
 
 ## Benchmark

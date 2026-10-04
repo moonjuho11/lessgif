@@ -1,8 +1,9 @@
 # The lessgif website
 
 GIF tools that run in the visitor's browser: video to GIF, images to GIF, compress, resize, crop,
-cut, speed, reverse, and rotate and flip, plus a download page for the app. Files are never
-uploaded; the pages are static, so any static host can serve them.
+cut, speed, reverse, rotate and flip, add text, split into frames, and GIF to MP4, plus a download
+page for the app. Files are never uploaded; the pages are static, so any static host can serve
+them.
 
 ## Build and try it
 
@@ -34,9 +35,16 @@ dependencies. Settings are in `site.config.json`:
 - `assets/gifdecode.js`: a GIF reader in plain JavaScript that shows frames exactly as Chrome
   does, so every browser gets the same frames and exact palette colours.
 - `assets/ops.js` and `assets/resample.js`: the edits (cut, speed, reverse, drop frames, crop,
-  rotate, flip, resize).
+  rotate, flip, resize, and drawing a picture such as text over chosen frames).
 - `assets/load.js`: reading videos (by seeking a `<video>`), still images, and animated WebP
   and PNG (through the browser's `ImageDecoder` where available).
+- `assets/zip.js`: a ZIP writer for the split tool (PNG and JPG are already compressed, so files
+  are stored as they are).
+- `assets/mp4mux.js`: an MP4 writer for GIF to MP4. The browser's own video encoder (WebCodecs)
+  makes H.264, or VP9 where H.264 isn't available, and each GIF frame becomes one video frame
+  with its own duration.
+- `assets/fonts/`: Anton, the meme font of the add-text tool (SIL Open Font License, see
+  `OFL.txt`).
 - `assets/tools/*.js`: one small script per page.
 
 Each tool keeps every frame in memory as RGBA, so the browser version limits the total number
@@ -52,9 +60,12 @@ node site/test/e2e.mjs               # every page in Chromium (needs Playwright)
 ```
 
 `e2e.mjs` uploads files to each page, runs it, and decodes the GIF the page made: crop, cut,
-speed, reverse and rotate at quality 100 must match the expected frames exactly. Screenshots
-land in `site/test/out/`. `site/test/decoder/` holds the checks of the GIF reader against
-Chromium's own decoder.
+speed, reverse and rotate at quality 100 must match the expected frames exactly. Split must give
+back every frame exactly as PNG, and GIF to MP4 must write one video frame per GIF frame with the
+same timing, in a file the browser plays. Playwright's own Chromium has no H.264 encoder, so
+there GIF to MP4 makes VP9; to test H.264 as well, point `CHROME` at a Chrome or Chrome for
+Testing binary. Screenshots land in `site/test/out/`. `site/test/decoder/` holds the checks of
+the GIF reader against Chromium's own decoder.
 
 ## Hosting
 

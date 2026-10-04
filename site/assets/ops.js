@@ -2,10 +2,10 @@
 // loop is what the GIF stores: 0 repeats forever, n repeats n times, null plays once.
 //
 // Timing operations (cut, speed, reverse, drop) choose and re-time frames without touching
-// pixels; picture operations (crop, resize, rotate, flip) change every frame. An operation list
-// is turned into a plan (which source frame goes where, with what delay, at what size), and
-// planned frames are drawn one at a time, so a long GIF never needs two full copies in memory
-// unless the picture really changes.
+// pixels; picture operations (crop, resize, rotate, flip, overlay) change the frames. An
+// operation list is turned into a plan (which source frame goes where, with what delay, at what
+// size), and planned frames are drawn one at a time, so a long GIF never needs two full copies in
+// memory unless the picture really changes.
 import { resize } from './resample.js';
 
 export const MIN_DELAY = 2; // browsers play anything shorter as 10 cs
@@ -114,6 +114,16 @@ export function plan(clip, ops) {
       case 'flip':
         if (op.h || op.v) draw.push({ type: 'flip', h: !!op.h, v: !!op.v, from: [w, h] });
         break;
+      case 'overlay': {
+        // a picture (RGBA, op.w x op.h) drawn over the frames at x, y, on source frames first..last
+        // (counted from 0, inclusive; all frames when left out)
+        if (op.rgba.length !== op.w * op.h * 4) throw new Error('The overlay has the wrong size.');
+        const first = op.first ?? 0;
+        const last = op.last ?? Infinity;
+        if (!(first <= last)) throw new Error('The first frame must come before the last one.');
+        draw.push({ type: 'overlay', x: Math.round(op.x), y: Math.round(op.y), w: op.w, h: op.h, rgba: op.rgba, first, last, from: [w, h] });
+        break;
+      }
       default:
         throw new Error(`unknown operation ${op.type}`);
     }
@@ -158,12 +168,44 @@ function flip(src, w, h, fh, fv) {
   return out;
 }
 
+// Blends an RGBA picture over a copy of the frame ("source over", like a canvas draws it).
+function overlay(src, w, h, d) {
+  const out = new Uint8ClampedArray(src);
+  const o = d.rgba;
+  const x0 = Math.max(0, d.x);
+  const x1 = Math.min(w, d.x + d.w);
+  for (let y = Math.max(0, d.y), y1 = Math.min(h, d.y + d.h); y < y1; y++) {
+    for (let x = x0; x < x1; x++) {
+      const i = ((y - d.y) * d.w + (x - d.x)) * 4;
+      const a = o[i + 3];
+      if (!a) continue;
+      const j = (y * w + x) * 4;
+      if (a === 255) {
+        out[j] = o[i];
+        out[j + 1] = o[i + 1];
+        out[j + 2] = o[i + 2];
+        out[j + 3] = 255;
+        continue;
+      }
+      const below = (out[j + 3] * (255 - a)) / 255; // how much of the frame shows through
+      const sum = a + below;
+      out[j] = (o[i] * a + out[j] * below) / sum;
+      out[j + 1] = (o[i + 1] * a + out[j + 1] * below) / sum;
+      out[j + 2] = (o[i + 2] * a + out[j + 2] * below) / sum;
+      out[j + 3] = sum;
+    }
+  }
+  return out;
+}
+
 // Frame k of a plan. Returns the source frame itself when no picture operation applies.
 export function drawFrame(clip, p, k) {
   let f = clip.frames[p.idx[k]];
   for (const d of p.draw) {
     const [w, h] = d.from;
-    if (d.type === 'crop') f = crop(f, w, d.x, d.y, d.w, d.h);
+    if (d.type === 'overlay') {
+      if (p.idx[k] >= d.first && p.idx[k] <= d.last) f = overlay(f, w, h, d);
+    } else if (d.type === 'crop') f = crop(f, w, d.x, d.y, d.w, d.h);
     else if (d.type === 'resize') f = resize(f, w, h, d.w, d.h);
     else if (d.type === 'rotate') f = rotate(f, w, h, d.turns);
     else if (d.type === 'flip') f = flip(f, w, h, d.h, d.v);

@@ -1,0 +1,62 @@
+<!-- {"path": "add-text/", "script": "text",
+  "title": "Add text to GIF: captions and meme text | lessgif",
+  "description": "Write captions or meme text on an animated GIF. Pick the font, colour and outline, drag the text into place, and choose the frames it shows on. Free, private, in your browser."} -->
+<h1>Add text to GIF</h1>
+<p class="lead">Write a caption or meme text on a GIF. Drag the text to move it, and choose which frames it shows on.</p>
+<div id="tool"></div>
+<template id="opts">
+  <div class="texter" data-texter><canvas></canvas><div class="tsel" hidden></div></div>
+  <div class="field" data-at-row>
+    <span>Frame shown above</span>
+    <div class="range"><input type="range" name="at" min="1" max="1" value="1" aria-label="Frame shown above"><output></output></div>
+  </div>
+  <div class="layers" data-layers></div>
+  <label class="field"><span>Text</span><textarea name="text" rows="2" placeholder="Type your text here"></textarea></label>
+  <div class="row">
+    <label class="field"><span>Font</span>
+      <select name="font">
+        <option value="meme">Anton (meme)</option>
+        <option value="sans">Sans-serif</option>
+        <option value="serif">Serif</option>
+        <option value="mono">Monospace</option>
+      </select>
+    </label>
+    <label class="field"><span>Size (pixels)</span><input type="number" name="size" min="6" max="1000" value="24"></label>
+    <label class="field"><span>Colour</span><input type="color" name="color" value="#ffffff"></label>
+    <label class="field"><span>Outline</span><input type="color" name="stroke" value="#000000"></label>
+  </div>
+  <div class="row">
+    <div class="field">
+      <span>Outline width</span>
+      <div class="seg" role="radiogroup" aria-label="Outline width">
+        <label><input type="radio" name="outline" value="0">None</label>
+        <label><input type="radio" name="outline" value="0.05">Thin</label>
+        <label><input type="radio" name="outline" value="0.09" checked>Medium</label>
+        <label><input type="radio" name="outline" value="0.14">Thick</label>
+      </div>
+    </div>
+    <label class="inline"><input type="checkbox" name="caps" checked> ALL CAPS</label>
+  </div>
+  <div class="field">
+    <span>Place</span>
+    <div class="seg" role="radiogroup" aria-label="Place">
+      <label><input type="radio" name="pos" value="top" checked>Top</label>
+      <label><input type="radio" name="pos" value="middle">Middle</label>
+      <label><input type="radio" name="pos" value="bottom">Bottom</label>
+    </div>
+    <small>Or drag the text on the picture, or click where it should go.</small>
+  </div>
+  <div class="row">
+    <label class="field"><span>Show from frame</span><input type="number" name="first" min="1" value="1"></label>
+    <label class="field"><span>to frame</span><input type="number" name="last" min="1" value="1"></label>
+    <button type="button" class="btn small secondary" data-allframes>All frames</button>
+  </div>
+  <p class="hint" data-summary></p>
+</template>
+{{ad:result}}
+<section class="prose faq">
+  <h2>About adding text</h2>
+  <p>Each text is drawn into every frame it shows on, then the GIF is encoded again at the quality you choose. The default of 90 keeps the picture very close to the original. Use <b>Add another text</b> for a second line in another place, such as the classic top and bottom meme text, or a caption that appears partway through.</p>
+  <h3>Which font is used?</h3>
+  <p>The meme font is Anton, an open-source font that comes with this site, so it looks the same on every device. The other fonts are the ones your device has, so they can look a little different elsewhere. Letters Anton doesn't have, such as Korean or Japanese, are drawn in your device's font.</p>
+</section>

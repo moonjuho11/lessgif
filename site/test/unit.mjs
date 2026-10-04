@@ -120,6 +120,28 @@ test('index-only plans reuse the source frames', () => {
   assert.equal(drawFrame(c, p, 0), c.frames[3]);
 });
 
+test('overlay blends over the chosen frames only, clipped to the frame', () => {
+  const c = clip(4, 3, 3);
+  c.frames[1][(1 * 4 + 3) * 4 + 3] = 0; // pixel (3, 1) of frame 1 is transparent
+  // a 2 x 2 picture at (2, 1): opaque white, half-transparent red, nothing, half-transparent red
+  const rgba = new Uint8ClampedArray([255, 255, 255, 255, 255, 0, 0, 128, 0, 0, 0, 0, 255, 0, 0, 128]);
+  const p = plan(c, [{ type: 'overlay', x: 2, y: 1, w: 2, h: 2, rgba, first: 1, last: 1 }]);
+  assert.equal(drawFrame(c, p, 0), c.frames[0], 'frames outside the range are not touched');
+  const f = drawFrame(c, p, 1);
+  assert.notEqual(f, c.frames[1], 'the source frame is not changed');
+  assert.deepEqual(px(f, 4, 2, 1), [255, 255, 255, 255]);
+  assert.deepEqual(px(f, 4, 3, 1), [255, 0, 0, 128], 'over a transparent pixel, the overlay is all that shows');
+  assert.deepEqual(px(f, 4, 2, 2), [2, 2, 1, 255], 'a transparent overlay pixel changes nothing');
+  const [r, g, b, a] = px(f, 4, 3, 2);
+  assert.equal(a, 255);
+  assert.ok(Math.abs(r - (255 * 128 + 3 * 127) / 255) <= 1 && Math.abs(g - (2 * 127) / 255) <= 1, `${[r, g, b]}`);
+  assert.deepEqual(px(f, 4, 0, 0), [0, 0, 1, 255]);
+  // partly outside the frame
+  const q = plan(c, [{ type: 'overlay', x: -1, y: 2, w: 2, h: 2, rgba }]);
+  assert.deepEqual(px(drawFrame(c, q, 2), 4, 0, 2), [255, 0, 0, 255].map((v, i) => (i < 3 ? Math.round((v * 128 + [0, 2, 2][i] * 127) / 255) : 255)));
+  assert.throws(() => plan(c, [{ type: 'overlay', x: 0, y: 0, w: 3, h: 3, rgba }]));
+});
+
 test('resize: flat colour stays flat, sizes are right, transparency is kept', () => {
   const w = 37;
   const h = 23;

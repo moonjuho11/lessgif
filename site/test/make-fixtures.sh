@@ -31,6 +31,13 @@ for i in range(8):
     ImageDraw.Draw(im).rectangle((i * 7, 10, i * 7 + 12, 30), fill=(10, 120, 60))
     fr.append(im)
 fr[0].save('once.gif', save_all=True, append_images=fr[1:], duration=100)
+# odd size with transparency and uneven timing, for GIF to MP4
+fr = []
+for i in range(10):
+    im = Image.new('RGBA', (61, 45), (0, 0, 0, 0))
+    ImageDraw.Draw(im).rectangle((i * 4, 5, i * 4 + 15, 30), fill=(250, 200, 0, 255))
+    fr.append(im)
+fr[0].save('odd.gif', save_all=True, append_images=fr[1:], duration=[20, 30, 100, 40] * 2 + [70, 70], loop=0, disposal=2)
 # stills of different shapes for the maker
 Image.new('RGB', (300, 200), (200, 40, 40)).save('red.png')
 im = Image.new('RGB', (200, 300), (40, 160, 60)); ImageDraw.Draw(im).ellipse((20, 20, 180, 180), fill=(250, 250, 250)); im.save('green.jpg', quality=92)

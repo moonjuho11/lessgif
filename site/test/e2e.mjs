@@ -1,9 +1,11 @@
 // Drives every page of the built site (site/dist) in Chromium and checks the GIFs it makes.
 //   sh site/test/make-fixtures.sh && node site/build.mjs && node site/test/e2e.mjs
 // Needs Playwright with Chromium (PLAYWRIGHT=<path to playwright/index.mjs> to use a global
-// install). Screenshots go to site/test/out/.
+// install). Screenshots go to site/test/out/. Playwright's Chromium can't encode H.264, so GIF to
+// MP4 makes VP9 there; CHROME=<path to a Chrome or Chrome for Testing binary> tests H.264 too.
 import { createServer } from 'node:http';
 import { readFileSync, writeFileSync, mkdirSync, existsSync, statSync } from 'node:fs';
+import { inflateSync } from 'node:zlib';
 import { extname, join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import assert from 'node:assert/strict';
@@ -19,7 +21,7 @@ mkdirSync(outDir, { recursive: true });
 const only = process.argv[2] ? new RegExp(process.argv[2]) : null;
 
 // ---- static server
-const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.wasm': 'application/wasm', '.svg': 'image/svg+xml', '.xml': 'application/xml', '.txt': 'text/plain' };
+const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.wasm': 'application/wasm', '.svg': 'image/svg+xml', '.xml': 'application/xml', '.txt': 'text/plain', '.woff2': 'font/woff2', '.png': 'image/png' };
 const server = createServer((req, res) => {
   let p = decodeURIComponent(new URL(req.url, 'http://x').pathname);
   if (p.endsWith('/')) p += 'index.html';
@@ -33,7 +35,7 @@ const server = createServer((req, res) => {
 await new Promise((ok) => server.listen(0, '127.0.0.1', ok));
 const base = `http://127.0.0.1:${server.address().port}`;
 
-const browser = await chromium.launch();
+const browser = await chromium.launch(process.env.CHROME ? { executablePath: process.env.CHROME } : {});
 const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 }, acceptDownloads: true });
 
 // ---- helpers
@@ -99,6 +101,81 @@ function expectFrames(out, src, ops) {
   return worst;
 }
 const kb = (n) => `${(n / 1024).toFixed(1)} KB`;
+
+// The files in a ZIP whose entries are stored (method 0), from its central directory.
+function unzip(b) {
+  const v = new DataView(b.buffer, b.byteOffset, b.byteLength);
+  let e = b.length - 22;
+  while (v.getUint32(e, true) !== 0x06054b50) e--;
+  const files = [];
+  for (let k = 0, o = v.getUint32(e + 16, true); k < v.getUint16(e + 10, true); k++) {
+    assert.equal(v.getUint32(o, true), 0x02014b50);
+    assert.equal(v.getUint16(o + 10, true), 0, 'stored');
+    const size = v.getUint32(o + 20, true);
+    const nameLen = v.getUint16(o + 28, true);
+    const name = new TextDecoder().decode(b.subarray(o + 46, o + 46 + nameLen));
+    const at = v.getUint32(o + 42, true);
+    const data = b.subarray(at + 30 + v.getUint16(at + 26, true) + v.getUint16(at + 28, true));
+    files.push({ name, data: data.subarray(0, size), crc: v.getUint32(o + 16, true) });
+    o += 46 + nameLen + v.getUint16(o + 30, true) + v.getUint16(o + 32, true);
+  }
+  return files;
+}
+
+// An 8-bit RGB or RGBA PNG (what browsers write) as RGBA.
+function decodePng(b) {
+  const v = new DataView(b.buffer, b.byteOffset, b.byteLength);
+  let w, h, type;
+  const idat = [];
+  for (let o = 8; o < b.length; ) {
+    const len = v.getUint32(o);
+    const t = String.fromCharCode(...b.subarray(o + 4, o + 8));
+    if (t === 'IHDR') {
+      [w, h, type] = [v.getUint32(o + 8), v.getUint32(o + 12), b[o + 17]];
+      assert.equal(b[o + 16], 8, 'bit depth');
+      assert.equal(b[o + 20], 0, 'not interlaced');
+    } else if (t === 'IDAT') idat.push(b.subarray(o + 8, o + 8 + len));
+    o += len + 12;
+  }
+  const ch = { 2: 3, 6: 4 }[type];
+  assert.ok(ch, `PNG colour type ${type}`);
+  const raw = inflateSync(Buffer.concat(idat));
+  const stride = w * ch;
+  const px = new Uint8Array(h * stride);
+  for (let y = 0; y < h; y++) {
+    const f = raw[y * (stride + 1)];
+    const line = raw.subarray(y * (stride + 1) + 1, (y + 1) * (stride + 1));
+    for (let x = 0; x < stride; x++) {
+      const a = x >= ch ? px[y * stride + x - ch] : 0;
+      const up = y ? px[(y - 1) * stride + x] : 0;
+      const c = x >= ch && y ? px[(y - 1) * stride + x - ch] : 0;
+      const pa = Math.abs(up - c), pb = Math.abs(a - c), pc = Math.abs(a + up - 2 * c);
+      const pred = [0, a, up, (a + up) >> 1, pa <= pb && pa <= pc ? a : pb <= pc ? up : c][f];
+      px[y * stride + x] = (line[x] + pred) & 255;
+    }
+  }
+  const rgba = new Uint8ClampedArray(w * h * 4);
+  for (let i = 0; i < w * h; i++) {
+    rgba.set(px.subarray(i * ch, i * ch + 3), i * 4);
+    rgba[i * 4 + 3] = ch === 4 ? px[i * ch + 3] : 255;
+  }
+  return { w, h, rgba };
+}
+
+// The boxes of an MP4 file as { type: [payload, ...] }, nested for the container boxes.
+function mp4Boxes(b, from = 0, to = b.length) {
+  const v = new DataView(b.buffer, b.byteOffset, b.byteLength);
+  const out = {};
+  for (let o = from; o < to; ) {
+    const size = v.getUint32(o);
+    const type = String.fromCharCode(...b.subarray(o + 4, o + 8));
+    assert.ok(size >= 8 && o + size <= to, `box ${type} of ${size} bytes at ${o}`);
+    const body = ['moov', 'trak', 'mdia', 'minf', 'stbl'].includes(type) ? mp4Boxes(b, o + 8, o + size) : b.subarray(o + 8, o + size);
+    (out[type] ??= []).push(body);
+    o += size;
+  }
+  return out;
+}
 
 const results = [];
 async function test(name, fn) {
@@ -384,6 +461,128 @@ await test('a result can be passed on to another tool', async () => {
   await page.close();
 });
 
+await test('add text: shows on the chosen frames only, where it was dragged', async () => {
+  const page = await open('/add-text/');
+  await upload(page, fx('film.gif'));
+  await loaded(page);
+  await page.fill('[name=text]', 'hello');
+  assert.equal(await page.textContent('[data-layers]'), 'Text 1: hello+ Add another text');
+  await page.fill('[name=last]', '30');
+  await page.$eval('[name=last]', (e) => e.dispatchEvent(new Event('input')));
+  await page.click('button:has-text("Add another text")');
+  await page.fill('[name=text]', 'bye');
+  await page.fill('[name=first]', '31');
+  await page.$eval('[name=first]', (e) => e.dispatchEvent(new Event('input')));
+  // drag "bye" from the bottom to the top left corner
+  const r = await (await page.$('[data-texter] canvas')).boundingBox();
+  const sel = await (await page.$('[data-texter] .tsel')).boundingBox();
+  await page.$eval('[name=at]', (e) => {
+    e.value = 40;
+    e.dispatchEvent(new Event('input'));
+  });
+  await page.mouse.move(sel.x + sel.width / 2, sel.y + sel.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(r.x + r.width * 0.15, r.y + r.height * 0.15, { steps: 5 });
+  await page.mouse.up();
+  await page.screenshot({ path: join(outDir, 'add-text.png'), fullPage: true });
+  const { bytes } = await run(page);
+  const out = decodeGif(bytes);
+  assert.equal(out.width, film.width);
+  assert.equal(dur(out), dur(film));
+  // where each output frame differs a lot from the source: the text
+  const box = (k) => {
+    const a = out.frames[at(out, film.delays.slice(0, k).reduce((x, y) => x + y, 0))];
+    const b = film.frames[k];
+    let n = 0, x0 = 1e9, y0 = 1e9, x1 = -1, y1 = -1;
+    for (let y = 0; y < out.height; y++) {
+      for (let x = 0; x < out.width; x++) {
+        const i = (y * out.width + x) * 4;
+        if (Math.max(Math.abs(a[i] - b[i]), Math.abs(a[i + 1] - b[i + 1]), Math.abs(a[i + 2] - b[i + 2])) < 90) continue;
+        n++;
+        [x0, y0, x1, y1] = [Math.min(x0, x), Math.min(y0, y), Math.max(x1, x), Math.max(y1, y)];
+      }
+    }
+    return { n, x0, y0, x1, y1 };
+  };
+  const first = box(10);
+  const second = box(45);
+  assert.ok(first.n > 150, `text 1 changed ${first.n} pixels`);
+  assert.ok(first.y1 < out.height / 2 && Math.abs((first.x0 + first.x1) / 2 - out.width / 2) < 12, `text 1 is centred at the top: ${JSON.stringify(first)}`);
+  assert.ok(second.n > 100 && second.x1 < out.width * 0.4 && second.y1 < out.height * 0.4, `text 2 was dragged to the top left: ${JSON.stringify(second)}`);
+  await page.close();
+  return `text 1 at ${first.x0},${first.y0}-${first.x1},${first.y1}; text 2 at ${second.x0},${second.y0}-${second.x1},${second.y1}`;
+});
+
+await test('split: a ZIP of PNGs with exactly the frames, or one JPG', async () => {
+  const page = await open('/split/');
+  await upload(page, fx('sticker.gif'));
+  await loaded(page);
+  await page.screenshot({ path: join(outDir, 'split.png'), fullPage: true });
+  const { bytes, facts } = await run(page);
+  const files = unzip(bytes);
+  assert.equal(files.length, sticker.frames.length);
+  files.forEach((f, i) => {
+    assert.equal(f.name, `sticker-${String(i + 1).padStart(3, '0')}.png`);
+    const png = decodePng(f.data);
+    assert.equal(png.w, sticker.width);
+    assert.equal(diff(png.rgba, sticker.frames[i]), 0, f.name);
+  });
+  await page.fill('[name=from]', '2');
+  await page.fill('[name=to]', '3');
+  await page.click('label:has(input[name=format][value=jpg])');
+  const jpg = unzip((await run(page)).bytes);
+  assert.deepEqual(jpg.map((f) => f.name), ['sticker-002.jpg', 'sticker-003.jpg']);
+  assert.deepEqual([...jpg[0].data.subarray(0, 3)], [0xff, 0xd8, 0xff]);
+  await page.close();
+  return facts.replace(/\s+/g, ' ').trim();
+});
+
+await test('GIF to MP4: every frame with its timing, even size, plays back', async () => {
+  const page = await open('/gif-to-mp4/');
+  const notes = [];
+  for (const [name, g, rep] of [['film.gif', film, 1], ['odd.gif', decodeGif(read('odd.gif')), 2]]) {
+    if (name !== 'film.gif') await page.click('button:has-text("Use another file")');
+    await upload(page, fx(name));
+    await page.waitForFunction((n) => document.querySelector('.facts')?.textContent.includes(n), name);
+    await page.click(`label:has(input[name=repeat][value="${rep}"])`);
+    const { bytes, facts } = await run(page);
+    if (name === 'film.gif') await page.screenshot({ path: join(outDir, 'gif-to-mp4.png'), fullPage: true });
+    assert.doesNotMatch(await page.textContent('#result'), /null|undefined/);
+    const top = mp4Boxes(bytes);
+    assert.deepEqual(Object.keys(top), ['ftyp', 'moov', 'mdat']);
+    const stbl = top.moov[0].trak[0].mdia[0].minf[0].stbl[0];
+    const dv = (u) => new DataView(u.buffer, u.byteOffset, u.byteLength);
+    const stts = dv(stbl.stts[0]);
+    const durs = [];
+    for (let k = 0; k < stts.getUint32(4); k++) for (let j = 0; j < stts.getUint32(8 + k * 8); j++) durs.push(stts.getUint32(12 + k * 8));
+    const want = Array(rep).fill(g.delays).flat().map((d) => d * 10);
+    assert.deepEqual(durs, want, 'one sample per frame, each as long as the frame');
+    const entry = stbl.stsd[0].subarray(8);
+    const codec = String.fromCharCode(...entry.subarray(4, 8));
+    const ew = dv(entry).getUint16(32);
+    const eh = dv(entry).getUint16(34);
+    assert.deepEqual([ew, eh], [g.width + (g.width & 1), g.height + (g.height & 1)]);
+    const sizes = dv(stbl.stsz[0]);
+    let total = 0;
+    for (let k = 0; k < sizes.getUint32(8); k++) total += sizes.getUint32(12 + k * 4);
+    assert.equal(total, top.mdat[0].length, 'the sample sizes add up to the data');
+    assert.equal(dv(stbl.stco[0]).getUint32(8), bytes.length - top.mdat[0].length, 'the chunk offset points at the data');
+    const played = await page.$eval('#result video', async (v) => {
+      if (v.readyState < 2) await new Promise((ok) => ((v.onloadeddata = ok), (v.onerror = ok), setTimeout(ok, 5000)));
+      return { w: v.videoWidth, h: v.videoHeight, d: v.duration, error: v.error?.code ?? null };
+    });
+    if (codec === 'vp09' || process.env.CHROME) {
+      assert.equal(played.error, null, `the browser can't play it: ${JSON.stringify(played)}`);
+      assert.deepEqual([played.w, played.h], [ew, eh]);
+      assert.ok(Math.abs(played.d - durs.reduce((a, b) => a + b, 0) / 1000) < 0.01, `duration ${played.d}`);
+    }
+    notes.push(`${name} -> ${codec} ${ew}x${eh}, ${kb(bytes.length)}`);
+    if (name === 'film.gif') notes.push(facts.match(/Size: [^)]*\)/)?.[0]);
+  }
+  await page.close();
+  return notes.join('; ');
+});
+
 await test('download, about and privacy pages render', async () => {
   for (const p of ['/download/', '/about/', '/privacy/']) {
     const page = await open(p);
@@ -395,11 +594,11 @@ await test('download, about and privacy pages render', async () => {
 
 await test('phone width: no sideways scrolling, ad preview slots show', async () => {
   const phone = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
-  for (const p of ['/', '/compress/', '/video-to-gif/', '/crop/', '/download/']) {
+  for (const p of ['/', '/compress/', '/video-to-gif/', '/crop/', '/add-text/', '/split/', '/gif-to-mp4/', '/download/']) {
     const page = await phone.newPage();
     page.on('pageerror', (e) => problems.push(`${p} (phone): ${e.message}`));
     await page.goto(base + p);
-    if (p === '/compress/' || p === '/crop/') {
+    if (['/compress/', '/crop/', '/add-text/', '/split/', '/gif-to-mp4/'].includes(p)) {
       await upload(page, fx('film.gif'));
       await loaded(page);
     }
