@@ -1,14 +1,21 @@
 # Builds the lessgif app for Windows, macOS and Linux, plus the browser build, and publishes them
-# as a GitHub release when a version tag is pushed:
+# as a GitHub release. Either run this workflow from the Actions tab (Run workflow) and type the
+# version, which tags the commit it ran on, or push a version tag:
 #   git tag v0.1.0 && git push origin v0.1.0
+# Run by hand with the version left empty, it builds everything without releasing.
 # The website's download page links to these files by name through releases/latest/download/,
-# so keep the names stable. Running the workflow by hand builds everything without releasing.
+# so keep the names stable.
 name: Release
 
 on:
   push:
     tags: ["v*"]
   workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to publish, like v0.1.0. Leave empty to only build."
+        required: false
+        default: ""
 
 permissions:
   contents: read
@@ -102,7 +109,7 @@ jobs:
   release:
     name: Publish the release
     needs: [app, wasm]
-    if: startsWith(github.ref, 'refs/tags/')
+    if: startsWith(github.ref, 'refs/tags/') || (github.event_name == 'workflow_dispatch' && inputs.version != '')
     runs-on: ubuntu-latest
     permissions:
       contents: write # create the release
@@ -126,4 +133,8 @@ jobs:
       - name: Create the release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" dist/* --repo "$GITHUB_REPOSITORY" --title "lessgif $GITHUB_REF_NAME" --generate-notes
+          TAG: ${{ inputs.version || github.ref_name }}
+        run: |
+          case "$TAG" in v[0-9]*.[0-9]*.[0-9]*) ;; *) echo "The version should look like v0.1.0, not: $TAG"; exit 1 ;; esac
+          # --target only matters when the tag doesn't exist yet (a run by hand): it tags this commit
+          gh release create "$TAG" dist/* --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "lessgif $TAG" --generate-notes
