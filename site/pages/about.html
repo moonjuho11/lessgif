@@ -1,0 +1,36 @@
+<!-- {"path": "about/",
+  "title": "About lessgif",
+  "description": "What lessgif is, how its GIF encoder works, how it was measured, and what its limits are."} -->
+<section class="prose">
+<h1>About lessgif</h1>
+<p class="lead">lessgif is a set of free GIF tools that run entirely in your browser, built on an open-source GIF encoder of the same name.</p>
+
+<h2>Why another GIF tool?</h2>
+<p>GIF is an old format, but it is still the one that plays everywhere: chats, forums, email, documentation. Most GIF tools upload your file to a server and use encoders designed decades ago. lessgif does the work on your own device, so your files stay private, and its encoder was designed from scratch to make small GIFs.</p>
+
+<h2>How the encoder works</h2>
+<p>A GIF encoder normally runs separate steps: choose a palette and dither, mark pixels that didn't change as transparent, and, in "lossy" GIF tools, nudge pixels so the compression works better. Each step adds its own error on top of the last one's.</p>
+<p>lessgif makes all of that one decision per pixel, always measured against the original colour. For each pixel it weighs continuing the current compressed run, keeping what the previous frame showed, or starting fresh with the nearest palette colour, and passes the remaining error on to the neighbouring pixels. Busy, textured areas are allowed more error than smooth ones, because noise hides in foliage but shows on a clear sky.</p>
+
+<h2>How it was measured</h2>
+<div class="table-wrap"><table>
+  <tr><th>Test</th><th>Result</th></tr>
+  <tr><td>Video to GIF, 363 film clips, against gifski 1.34</td><td>50% smaller (median) at the same SSIMULACRA2 score of 70; smaller on every clip</td></tr>
+  <tr><td>Re-compressing 281 GIFs, against gifsicle 1.94 lossy</td><td>40% smaller (median) at the same score</td></tr>
+  <tr><td>Near-lossless re-compression</td><td>12 to 16% smaller than gifsicle</td></tr>
+  <tr><td>Lossless (quality 100)</td><td>all 281 test GIFs reproduced exactly</td></tr>
+  <tr><td>Correctness</td><td>5,000 random test cases decode pixel-exactly in Pillow, ffmpeg and Chromium</td></tr>
+</table></div>
+<p>SSIMULACRA2 is a perceptual metric: it scores how close a picture looks to the original. The benchmark scripts and the list of test clips are in the <a href="{{repo}}">source repository</a>, so anyone can rerun them.</p>
+
+<h2>Limits worth knowing</h2>
+<ul>
+  <li>At the same score, lessgif's GIFs show a little more fine grain in flat areas such as sky when you zoom in. At normal size they look alike. No blind viewing test has been done yet.</li>
+  <li>The test material was film footage and GIFs made from it. Screen recordings, phone videos and GIFs from the web may shrink more or less.</li>
+  <li>A GIF that has already been optimised hard may not get smaller. The compressor then tells you to keep the original.</li>
+  <li>The browser keeps every frame in memory, so very long or very large clips are better done with the <a href="../download/">app</a>.</li>
+</ul>
+
+<h2>Open source</h2>
+<p>The encoder, this website and the benchmark are open source under the MIT or Apache-2.0 license. Bug reports and ideas are welcome as <a href="{{repo}}/issues">issues on GitHub</a>.</p>
+</section>

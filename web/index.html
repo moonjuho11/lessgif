@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>lessgif demo</title>
+<style>
+  :root { --bg: #fafaf8; --fg: #1b1b1b; --muted: #6b6b6b; --line: #ddd; --accent: #2f6fd6; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #161616; --fg: #ececec; --muted: #9a9a9a; --line: #333; --accent: #7aa7ff; } }
+  body { background: var(--bg); color: var(--fg); font: 15px/1.5 system-ui, sans-serif; margin: 0 auto; max-width: 860px; padding: 24px 16px; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  p { color: var(--muted); margin: 0 0 16px; }
+  form { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; padding: 12px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  label { display: flex; gap: 8px; align-items: center; }
+  input[type=number] { width: 4.5em; }
+  button { background: var(--accent); color: #fff; border: 0; border-radius: 6px; padding: 8px 16px; font: inherit; cursor: pointer; }
+  button:disabled { opacity: 0.5; cursor: default; }
+  #status { margin: 16px 0; min-height: 1.5em; }
+  .out { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+  figure { margin: 0; }
+  figure img { max-width: 100%; display: block; background: repeating-conic-gradient(#8882 0 25%, transparent 0 50%) 0 0 / 16px 16px; }
+  figcaption { color: var(--muted); font-size: 13px; margin-top: 6px; }
+  a { color: var(--accent); }
+</style>
+</head>
+<body>
+<h1>lessgif</h1>
+<p>Turns a video or GIF into a small GIF, entirely in this browser tab. Nothing is uploaded.</p>
+<form id="form">
+  <input type="file" id="file" accept="video/*,image/gif" required>
+  <label>quality <input type="range" id="quality" min="0" max="100" value="70"> <span id="qv">70</span></label>
+  <label>fps <input type="number" id="fps" value="15" min="1" max="50"></label>
+  <label>max side <input type="number" id="side" value="480" min="16" max="2000"></label>
+  <button id="go">Make GIF</button>
+</form>
+<div id="status"></div>
+<div class="out" id="out"></div>
+<script type="module">
+const $ = (id) => document.getElementById(id);
+const status = (t) => ($('status').textContent = t);
+const kb = (n) => `${(n / 1024).toFixed(1)} KB`;
+$('quality').oninput = () => ($('qv').textContent = $('quality').value);
+const MAX_SECONDS = 20;
+
+// Video: seek through it at the chosen frame rate and read each frame back from a canvas.
+async function videoFrames(file, fps, side) {
+  const v = document.createElement('video');
+  v.muted = true;
+  v.playsInline = true;
+  v.src = URL.createObjectURL(file);
+  await new Promise((ok, fail) => { v.onloadedmetadata = ok; v.onerror = () => fail(new Error('this browser cannot play that video')); });
+  const k = Math.min(1, side / Math.max(v.videoWidth, v.videoHeight));
+  const w = Math.max(1, Math.round(v.videoWidth * k)), h = Math.max(1, Math.round(v.videoHeight * k));
+  const ctx = new OffscreenCanvas(w, h).getContext('2d', { willReadFrequently: true });
+  const n = Math.max(1, Math.floor(Math.min(v.duration, MAX_SECONDS) * fps));
+  const frames = [];
+  for (let i = 0; i < n; i++) {
+    v.currentTime = i / fps;
+    await new Promise((ok) => (v.onseeked = ok));
+    ctx.drawImage(v, 0, 0, w, h);
+    frames.push(ctx.getImageData(0, 0, w, h).data.buffer);
+    status(`Reading frames: ${i + 1} of ${n}`);
+  }
+  URL.revokeObjectURL(v.src);
+  const cs = (i) => Math.round((i * 100) / fps);
+  return { w, h, frames, delays: frames.map((_, i) => cs(i + 1) - cs(i)) };
+}
+
+// GIF: ImageDecoder (WebCodecs) gives fully composited frames with their own timing.
+async function gifFrames(file) {
+  if (!('ImageDecoder' in self)) throw new Error('this browser has no ImageDecoder; try Chrome, Edge or Safari, or use the CLI');
+  const dec = new ImageDecoder({ data: file.stream(), type: 'image/gif' });
+  await dec.tracks.ready;
+  const n = dec.tracks.selectedTrack.frameCount;
+  const frames = [], delays = [];
+  let w, h, ctx;
+  for (let i = 0; i < n; i++) {
+    const { image } = await dec.decode({ frameIndex: i });
+    if (!ctx) {
+      (w = image.displayWidth), (h = image.displayHeight);
+      ctx = new OffscreenCanvas(w, h).getContext('2d', { willReadFrequently: true });
+    }
+    ctx.clearRect(0, 0, w, h);
+    ctx.drawImage(image, 0, 0);
+    frames.push(ctx.getImageData(0, 0, w, h).data.buffer);
+    // browsers show delays under 2 cs as 10 cs; keep what people actually saw
+    const d = Math.round((image.duration ?? 100000) / 10000);
+    delays.push(d < 2 ? 10 : d);
+    image.close();
+    status(`Reading frames: ${i + 1} of ${n}`);
+  }
+  return { w, h, frames, delays };
+}
+
+function encode(job) {
+  return new Promise((ok, fail) => {
+    const worker = new Worker('./worker.js', { type: 'module' });
+    worker.onmessage = ({ data }) => { worker.terminate(); data.error ? fail(new Error(data.error)) : ok(data); };
+    worker.onerror = (e) => { worker.terminate(); fail(new Error(e.message || 'worker failed to start')); };
+    worker.postMessage(job, job.frames);
+  });
+}
+
+function show(src, caption) {
+  const f = document.createElement('figure');
+  f.innerHTML = '<img alt=""><figcaption></figcaption>';
+  f.querySelector('img').src = src;
+  f.querySelector('figcaption').append(...caption);
+  $('out').append(f);
+}
+
+$('form').onsubmit = async (e) => {
+  e.preventDefault();
+  const file = $('file').files[0];
+  $('go').disabled = true;
+  $('out').replaceChildren();
+  status('Reading frames...');
+  try {
+    const isGif = file.type === 'image/gif';
+    const clip = isGif ? await gifFrames(file) : await videoFrames(file, +$('fps').value, +$('side').value);
+    status(`Encoding ${clip.frames.length} frames (${clip.w}x${clip.h})...`);
+    const r = await encode({ ...clip, quality: +$('quality').value });
+    const gif = new Blob([r.gif], { type: 'image/gif' });
+    const url = URL.createObjectURL(gif);
+    const a = Object.assign(document.createElement('a'), { href: url, download: file.name.replace(/\.[^.]+$/, '') + '.lessgif.gif', textContent: 'download' });
+    if (isGif) show(URL.createObjectURL(file), [`original: ${kb(file.size)}`]);
+    show(url, [`lessgif: ${kb(gif.size)}${isGif ? ` (${((1 - gif.size / file.size) * 100).toFixed(0)}% smaller)` : ''}, `, a]);
+    status(`Done in ${(r.ms / 1000).toFixed(1)} s.${isGif && gif.size >= file.size ? ' The original is already smaller: keep it.' : ''}`);
+  } catch (err) {
+    status(`Error: ${err.message}`);
+  } finally {
+    $('go').disabled = false;
+  }
+};
+</script>
+</body>
+</html>

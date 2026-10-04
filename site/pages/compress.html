@@ -1,0 +1,28 @@
+<!-- {"path": "compress/", "script": "compress",
+  "title": "Compress GIF: make GIF files smaller, free and private | lessgif",
+  "description": "Make GIF files smaller online without uploading them. lessgif re-encodes your GIF in your browser, often to half the size or less, or to fit a size limit."} -->
+<h1>Compress GIF</h1>
+<p class="lead">Make a GIF smaller without making it look worse. It's re-encoded right here in your browser, so the file never leaves your device.</p>
+<div id="tool"></div>
+<template id="opts">
+  <div class="field">
+    <span>Drop frames</span>
+    <div class="seg" role="radiogroup" aria-label="Drop frames">
+      <label><input type="radio" name="drop" value="1" checked>Keep all</label>
+      <label><input type="radio" name="drop" value="2">Every 2nd</label>
+      <label><input type="radio" name="drop" value="3">Every 3rd</label>
+    </div>
+    <small>Fewer frames make a much smaller file. The GIF keeps its length, so motion gets a little choppier.</small>
+  </div>
+</template>
+{{ad:result}}
+<section class="prose faq">
+  <h2>How much smaller?</h2>
+  <p>It depends on the GIF. On a test set of 281 GIFs made from film clips, screen recordings, stickers and memes, lessgif's files were a median 40% smaller than gifsicle's lossy optimizer at the same measured quality. GIFs that were made carelessly shrink the most. A GIF that has already been squeezed hard may not get smaller at all; then you keep the original.</p>
+  <h3>What does the quality setting do?</h3>
+  <p>Lower quality lets the encoder bend each pixel's colour a little so the file compresses better. At 100 nothing is changed: the GIF is stored again exactly, which sometimes saves a few percent. 90 is very hard to tell apart from the original; 70 is a good default.</p>
+  <h3>Can I make it fit a size limit?</h3>
+  <p>Yes. Tick <b>Fit a size limit instead</b> and enter the limit, for example 8 MB for a chat app or 256 KB for an emoji. lessgif finds the best quality that fits, and only shrinks the picture if even low quality is too big.</p>
+  <h3>Is my GIF uploaded?</h3>
+  <p>No. Everything runs in this browser tab with WebAssembly. Nothing is sent to a server, so it also works for private files.</p>
+</section>

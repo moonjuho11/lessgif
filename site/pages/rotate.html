@@ -1,0 +1,26 @@
+<!-- {"path": "rotate/", "script": "rotate",
+  "title": "Rotate and flip GIF online | lessgif",
+  "description": "Rotate an animated GIF by 90 or 180 degrees, or flip it horizontally or vertically. Free, private, nothing is uploaded."} -->
+<h1>Rotate and flip GIF</h1>
+<p class="lead">Turn a GIF on its side, upside down, or mirror it. Every pixel is moved exactly, so nothing is lost.</p>
+<div id="tool"></div>
+<template id="opts">
+  <div class="field">
+    <span>Rotate</span>
+    <div class="seg" role="radiogroup" aria-label="Rotate">
+      <label><input type="radio" name="deg" value="0" checked>None</label>
+      <label><input type="radio" name="deg" value="90">90° right</label>
+      <label><input type="radio" name="deg" value="270">90° left</label>
+      <label><input type="radio" name="deg" value="180">180°</label>
+    </div>
+  </div>
+  <div class="row">
+    <label class="inline"><input type="checkbox" name="fh"> Flip horizontally (mirror)</label>
+    <label class="inline"><input type="checkbox" name="fv"> Flip vertically</label>
+  </div>
+</template>
+{{ad:result}}
+<section class="prose faq">
+  <h2>About rotating</h2>
+  <p>Rotating by 90 or 180 degrees and flipping just move pixels around, so at quality 100 the result has exactly the same pixels as your GIF. The flip is applied after the rotation.</p>
+</section>

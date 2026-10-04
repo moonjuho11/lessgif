@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{title}}</title>
+<meta name="description" content="{{description}}">
+<link rel="canonical" href="{{canonical}}">
+<meta property="og:type" content="website">
+<meta property="og:title" content="{{title}}">
+<meta property="og:description" content="{{description}}">
+<meta property="og:url" content="{{canonical}}">
+<meta property="og:image" content="{{base}}/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#14794f">
+<link rel="icon" href="{{root}}favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="{{root}}assets/style.css">
+{{head}}
+</head>
+<body data-ads="{{adsOn}}">
+<header class="top">
+  <div class="top-in">
+    <a class="logo" href="{{root}}"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="currentColor"/><path d="M9 9v14h8M19 13l4 4-4 4" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>lessgif</a>
+    <nav class="tools-nav" aria-label="Tools">{{nav}}</nav>
+    <a class="dl-link" href="{{root}}download/">Download</a>
+  </div>
+</header>
+{{ad:top}}
+<div class="page">
+  <main>
+{{content}}
+  </main>
+  <aside class="rail">{{ad:side}}</aside>
+</div>
+<footer class="foot">
+  <p><b>lessgif</b> makes GIFs in your browser. Your files never leave your device.</p>
+  <p><a href="{{root}}download/">Download the app</a> · <a href="{{repo}}">Source code</a> · <a href="{{root}}about/">About</a> · <a href="{{root}}privacy/">Privacy</a></p>
+  <p class="fine">The lessgif encoder is open source under the MIT or Apache-2.0 license.</p>
+</footer>
+<script type="module" src="{{root}}assets/site.js"></script>
+{{script}}
+</body>
+</html>

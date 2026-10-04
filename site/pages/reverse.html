@@ -1,0 +1,21 @@
+<!-- {"path": "reverse/", "script": "reverse",
+  "title": "Reverse GIF: play a GIF backwards or as a boomerang | lessgif",
+  "description": "Reverse an animated GIF so it plays backwards, or make a boomerang that plays forwards then backwards. Free, private, in your browser."} -->
+<h1>Reverse GIF</h1>
+<p class="lead">Play a GIF backwards, or make a boomerang that goes forwards and then backwards in a seamless loop.</p>
+<div id="tool"></div>
+<template id="opts">
+  <div class="field">
+    <span>Direction</span>
+    <div class="seg" role="radiogroup" aria-label="Direction">
+      <label><input type="radio" name="mode" value="reverse" checked>Backwards</label>
+      <label><input type="radio" name="mode" value="boomerang">Boomerang</label>
+    </div>
+    <small>A boomerang plays the frames forwards, then backwards, so the loop has no jump.</small>
+  </div>
+</template>
+{{ad:result}}
+<section class="prose faq">
+  <h2>About reversing</h2>
+  <p>Reversing keeps every frame and its timing, only in the opposite order. At the default quality of 100 the frames are stored exactly as they were. A boomerang is about twice as long, so the file grows too; Compress can bring it back down.</p>
+</section>

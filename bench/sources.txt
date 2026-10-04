@@ -1,0 +1,32 @@
+# The 28 source videos behind bench/clips.csv: URL, size in bytes, SHA-256.
+# fetch.sh downloads them and checks the hashes. They are public test material: Xiph.org's
+# "derf" collection of standard video test sequences, and the Blender Foundation's open movies
+# (CC BY 3.0). They are downloaded from their publishers, not redistributed here.
+https://media.xiph.org/video/derf/y4m/akiyo_cif.y4m 45621044 0f7a1f997930217d601ab324b1428859fdb599dde8d33772a24bfe2803a9b067
+https://media.xiph.org/video/derf/y4m/bowing_cif.y4m 45621044 bfd282c4dfbe6b5ac93a014e97e7bd5104ed357a744879b75b414adb9e8069ec
+https://media.xiph.org/video/derf/y4m/bus_cif.y4m 22810538 08f557aade483465fca3ad9f5ce9a5b6aad7e833c871ec969b5b8fbb0a791c87
+https://media.xiph.org/video/derf/y4m/city_cif.y4m 45621038 2f99e08e66376c0a0acc9c7349aef7f61020be8fbfe6440bdb0c7ec7d05bb30f
+https://media.xiph.org/video/derf/y4m/coastguard_cif.y4m 45621044 ae4052051ee9d77236ced5b231239dec97831c66faea3d7b70694e222ce00c43
+https://media.xiph.org/video/derf/y4m/container_cif.y4m 45621044 45abe3a99a0e2914742b3eecf474335362e31921bc0b30eef1dd45bb42df82be
+https://media.xiph.org/video/derf/y4m/crew_cif.y4m 45621038 c838aac518b44aa5d6be2c68d904a836f641c74481b4fcef611809cd31691b14
+https://media.xiph.org/video/derf/y4m/flower_cif.y4m 38017544 26c7934b77186836a39db113e8011e841bd593e37295efb98a38915b24aa2b8e
+https://media.xiph.org/video/derf/y4m/football_cif.y4m 39538238 941d255821a877a4ed476cbeb8b9a2c0c6f72cfab86927afb5e355eb46a99956
+https://media.xiph.org/video/derf/y4m/foreman_cif.y4m 45621044 b0e3c35eff9fe1da91521a02eb9f0e3ef4bc5aec341ecef1567cd87f1711267b
+https://media.xiph.org/video/derf/y4m/garden_sif.y4m 14573536 9c32a760eb8a5ba8c7dd734f136048175e6f77ed1e15f3d9d8e4d5d635184467
+https://media.xiph.org/video/derf/y4m/hall_monitor_cif.y4m 45621044 d0d4d6ebd137378bb5a7448c04d0cb73c20458a91d41d0f00cb090bd84bedd93
+https://media.xiph.org/video/derf/y4m/harbour_cif.y4m 45621038 615d09d4d525e2e722dcbd1da09a40724565ea067c7f760563b0a94dce407dbb
+https://media.xiph.org/video/derf/y4m/husky_cif.y4m 38017544 a1c0b9518cf80586a34029d00897fac3305ddc882d13da83eaa8ae2c1684090e
+https://media.xiph.org/video/derf/y4m/ice_cif.y4m 36496838 5b8ce4fceece3bfa41515c0d6ee27b03f721a784928f81285972f97301affa67
+https://media.xiph.org/video/derf/y4m/mobile_cif.y4m 45621054 8b32924ea00ef3bd52f7ddafd3ceb55d2bb331610b59957c5c3cc9628f9e0d90
+https://media.xiph.org/video/derf/y4m/mother_daughter_cif.y4m 45621044 fe3c976177a866c613edfa98d32a2380b0f058ec2a6ab4927c28366211e9e9e9
+https://media.xiph.org/video/derf/y4m/news_cif.y4m 45621044 ff65a92e5fca985b56f1dad3680da5fd44b3255de0befbcbe3d1402ce3fb8834
+https://media.xiph.org/video/derf/y4m/pamphlet_cif.y4m 45621044 268ecf3b87839d40cf3259e15a7b40471ed8eb9d395c7f9bb14ef9cca49bcbeb
+https://media.xiph.org/video/derf/y4m/silent_cif.y4m 45621044 69f28af5b3700f87078137967fb414d681c7fb587822af4d839dbe3ada2473dc
+https://media.xiph.org/video/derf/y4m/soccer_cif.y4m 45621038 be2039264206e86c7529391871781a53b73ae9cc9da402fc695ae1b5b834afca
+https://media.xiph.org/video/derf/y4m/stefan_sif.y4m 38017846 28c0dc1afdd9081d8004cc35f839f8d34cabc0fc8b677f9f70286be6bdbd9f57
+https://media.xiph.org/video/derf/y4m/tempete_cif.y4m 39538244 6bfa101c68f34f5f593889f3974dbca89117aff784f251f444cbace572557878
+https://media.xiph.org/video/derf/y4m/tennis_sif.y4m 19008946 af87af34cff4414980fc777bdb5dfb23d4678fc2f3ecaba5b00aa6fee402c98b
+https://media.xiph.org/video/derf/y4m/tt_sif.y4m 14193358 be124ec512015cacb956b8df6630d6575043de878a6eb378047c6239f011f39f
+https://download.blender.org/durian/trailer/sintel_trailer-480p.mp4 4372373 b670602fa00934ca27c4351bb0efe7ea7a07fae57284e44226025eeed7c51254
+https://download.blender.org/demo/movies/ToS/tears_of_steel_720p.mov 372178639 efa9062d9cdb7a338e40ad530dfdf234806743f29ae6a1a136b97ece4e588e8f
+https://upload.wikimedia.org/wikipedia/commons/transcoded/c/c0/Big_Buck_Bunny_4K.webm/Big_Buck_Bunny_4K.webm.480p.vp9.webm 96645673 6d6c5ab5862cadec8c61cdba8044526bff3350b715657c7c3a9e575c491769d0

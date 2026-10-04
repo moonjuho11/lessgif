@@ -1,0 +1,37 @@
+<!-- {"path": "download/", "script": "download",
+  "title": "Download lessgif: GIF encoder app for Windows, macOS and Linux",
+  "description": "Download the free, open-source lessgif GIF encoder for Windows, macOS and Linux, or use it in your own Rust program or web page."} -->
+<h1>Download lessgif</h1>
+<p class="lead">The same encoder as this website, as a command-line app. It has no limits on file size or length, uses all your processor's cores, and is free and open source.</p>
+<div class="dl" id="downloads">
+  <a data-os="windows" href="{{repo}}/releases/latest/download/lessgif-x86_64-pc-windows-msvc.zip"><b>Windows</b><span>64-bit, .zip</span></a>
+  <a data-os="mac" href="{{repo}}/releases/latest/download/lessgif-universal-apple-darwin.tar.gz"><b>macOS</b><span>Apple silicon and Intel, .tar.gz</span></a>
+  <a data-os="linux" href="{{repo}}/releases/latest/download/lessgif-x86_64-unknown-linux-musl.tar.gz"><b>Linux</b><span>x86-64, .tar.gz</span></a>
+  <a data-os="linux-arm" href="{{repo}}/releases/latest/download/lessgif-aarch64-unknown-linux-musl.tar.gz"><b>Linux ARM</b><span>64-bit ARM (Raspberry Pi 4 and newer), .tar.gz</span></a>
+</div>
+<p class="hint"><a href="{{repo}}/releases/latest">All files and checksums</a> · <a href="{{repo}}/releases">Older versions</a> · <a href="{{repo}}">Source code</a></p>
+
+<section class="prose">
+  <h2>Using it</h2>
+  <p>Unpack the download and run <code>lessgif</code> from a terminal. Making GIFs from videos needs <a href="https://ffmpeg.org/download.html">ffmpeg</a> installed as well (<code>winget install ffmpeg</code> on Windows, <code>brew install ffmpeg</code> on macOS, or your Linux package manager). GIFs and folders of PNG frames work without it.</p>
+<pre>lessgif clip.mp4 clip.gif                     # video to GIF, 15 fps, up to 480 px
+lessgif clip.mp4 clip.gif --quality 85 --fps 20 --max-side 640
+lessgif big.gif small.gif --quality 70        # re-compress a GIF
+lessgif big.gif small.gif --max-size 8M       # best quality that fits in 8 MB
+lessgif frames/ anim.gif --fps 12             # a folder of PNG frames
+lessgif --help                                # every option</pre>
+  <h3>"Unknown developer" warnings</h3>
+  <p>The apps aren't signed with a paid certificate yet. On macOS, if it says the app can't be checked, run <code>xattr -d com.apple.quarantine lessgif</code> once in the folder you unpacked it to. On Windows, SmartScreen may ask you to confirm with <b>More info</b>, then <b>Run anyway</b>. The download page's checksums let you verify the files.</p>
+
+  <h2>For developers</h2>
+  <h3>Rust</h3>
+  <p>Build the app from source with <code>cargo install --git {{repo}}</code>, or use the encoder as a library. Without its default <code>cli</code> feature it has no dependencies.</p>
+<pre>[dependencies]
+lessgif = { git = "{{repo}}", default-features = false }</pre>
+  <h3>In a web page</h3>
+  <p>The browser build is about 70 KB compressed and gives the same bytes as the app. Download <a href="{{repo}}/releases/latest/download/lessgif-wasm.zip">lessgif-wasm.zip</a>, put <code>lessgif.js</code> and <code>lessgif.wasm</code> next to your page, and call it from a worker:</p>
+<pre>import { loadLessGif, delaysForFps } from './lessgif.js';
+const encoder = await loadLessGif();
+const { gif } = encoder.encode({ w, h, n, getFrame: (i) =&gt; frames[i], delays: delaysForFps(n, 15), quality: 70 });</pre>
+  <p>The README on <a href="{{repo}}">GitHub</a> explains the settings, the size-limit search and how the encoder works.</p>
+</section>

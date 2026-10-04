@@ -1,0 +1,30 @@
+<!-- {"path": "crop/", "script": "crop",
+  "title": "Crop GIF: cut out part of an animated GIF | lessgif",
+  "description": "Crop an animated GIF by dragging a box, or to an exact size and aspect ratio. Free, private, nothing is uploaded."} -->
+<h1>Crop GIF</h1>
+<p class="lead">Drag a box over the part of the GIF you want to keep. Every frame is cropped the same way.</p>
+<div id="tool"></div>
+<template id="opts">
+  <div class="field">
+    <span>Shape</span>
+    <div class="seg" role="radiogroup" aria-label="Shape">
+      <label><input type="radio" name="ratio" value="0" checked>Free</label>
+      <label><input type="radio" name="ratio" value="1">Square</label>
+      <label><input type="radio" name="ratio" value="1.3333">4:3</label>
+      <label><input type="radio" name="ratio" value="1.7778">16:9</label>
+      <label><input type="radio" name="ratio" value="0.5625">9:16</label>
+    </div>
+  </div>
+  <div class="cropper" data-cropper><canvas></canvas><div class="sel"><i class="h" data-h="nw"></i><i class="h" data-h="ne"></i><i class="h" data-h="sw"></i><i class="h" data-h="se"></i></div></div>
+  <div class="row">
+    <label class="field"><span>Left</span><input type="number" name="x" min="0" value="0"></label>
+    <label class="field"><span>Top</span><input type="number" name="y" min="0" value="0"></label>
+    <label class="field"><span>Width</span><input type="number" name="w" min="1" value="1"></label>
+    <label class="field"><span>Height</span><input type="number" name="h" min="1" value="1"></label>
+  </div>
+</template>
+{{ad:result}}
+<section class="prose faq">
+  <h2>About cropping</h2>
+  <p>Cropping only removes pixels, so at the default quality of 100 everything inside the box stays exactly as it was. A smaller picture also means a smaller file.</p>
+</section>

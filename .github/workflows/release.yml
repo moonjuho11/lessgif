@@ -1,0 +1,110 @@
+# Builds the lessgif app for Windows, macOS and Linux, plus the browser build, and publishes them
+# as a GitHub release when a version tag is pushed:
+#   git tag v0.1.0 && git push origin v0.1.0
+# The website's download page links to these files by name through releases/latest/download/,
+# so keep the names stable. Running the workflow by hand builds everything without releasing.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  app:
+    name: App for ${{ matrix.target }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: windows-latest, target: x86_64-pc-windows-msvc }
+          - { os: macos-latest, target: universal-apple-darwin }
+          - { os: ubuntu-latest, target: x86_64-unknown-linux-musl }
+          - { os: ubuntu-24.04-arm, target: aarch64-unknown-linux-musl }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target == 'universal-apple-darwin' && 'aarch64-apple-darwin,x86_64-apple-darwin' || matrix.target }}
+      - name: Install musl
+        if: contains(matrix.target, 'musl')
+        run: sudo apt-get update && sudo apt-get install -y musl-tools
+      - name: Build
+        shell: bash
+        run: |
+          if [ "${{ matrix.target }}" = universal-apple-darwin ]; then
+            # one file that runs natively on Apple silicon and Intel Macs
+            cargo build --release --locked --target aarch64-apple-darwin
+            cargo build --release --locked --target x86_64-apple-darwin
+            mkdir -p target/universal-apple-darwin/release
+            lipo -create -output target/universal-apple-darwin/release/lessgif \
+              target/aarch64-apple-darwin/release/lessgif target/x86_64-apple-darwin/release/lessgif
+          else
+            cargo build --release --locked --target ${{ matrix.target }}
+          fi
+      - name: Check it runs
+        shell: bash
+        run: |
+          bin=target/${{ matrix.target }}/release/lessgif
+          "$bin" --version
+          "$bin" tests/data/tiny.gif smoke.gif --quality 70
+          test -s smoke.gif
+      - name: Package
+        shell: bash
+        run: |
+          name=lessgif-${{ matrix.target }}
+          mkdir "$name"
+          cp README.md LICENSE-MIT LICENSE-APACHE "$name/"
+          if [ "${{ runner.os }}" = Windows ]; then
+            cp target/${{ matrix.target }}/release/lessgif.exe "$name/"
+            7z a "$name.zip" "$name"
+          else
+            cp target/${{ matrix.target }}/release/lessgif "$name/"
+            tar czf "$name.tar.gz" "$name"
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.target }}
+          path: |
+            lessgif-*.zip
+            lessgif-*.tar.gz
+
+  wasm:
+    name: Browser build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - run: sh web/build.sh
+      - name: Package
+        run: |
+          mkdir lessgif-wasm
+          cp web/lessgif.js web/lessgif.wasm LICENSE-MIT LICENSE-APACHE lessgif-wasm/
+          zip -r lessgif-wasm.zip lessgif-wasm
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wasm
+          path: lessgif-wasm.zip
+
+  release:
+    name: Publish the release
+    needs: [app, wasm]
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Checksums
+        run: cd dist && sha256sum * > SHA256SUMS.txt && cat SHA256SUMS.txt
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" dist/* --repo "$GITHUB_REPOSITORY" --title "lessgif $GITHUB_REF_NAME" --generate-notes

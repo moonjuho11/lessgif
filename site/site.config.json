@@ -1,0 +1,9 @@
+{
+  "name": "lessgif",
+  "baseUrl": "https://lessgif.com",
+  "repo": "moonjuho11/lessgif",
+  "adsense": {
+    "client": "",
+    "slots": { "top": "", "result": "", "side": "" }
+  }
+}

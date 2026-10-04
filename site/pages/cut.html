@@ -1,0 +1,30 @@
+<!-- {"path": "cut/", "script": "cut",
+  "title": "Cut GIF: trim frames from an animated GIF | lessgif",
+  "description": "Trim an animated GIF: keep only the part you want, or remove frames from the middle. Pick frames visually. Free, private, in your browser."} -->
+<h1>Cut GIF</h1>
+<p class="lead">Keep just the part of a GIF you want, or take a stretch of frames out of it.</p>
+<div id="tool"></div>
+<template id="opts">
+  <div class="field">
+    <span>Pick frames</span>
+    <small>Click a frame to start the selection, then another to end it.</small>
+    <div class="frames" data-frames></div>
+  </div>
+  <div class="row">
+    <label class="field"><span>From frame</span><input type="number" name="from" min="1" value="1"></label>
+    <label class="field"><span>To frame</span><input type="number" name="to" min="1" value="1"></label>
+    <div class="field">
+      <span>Selected frames</span>
+      <div class="seg" role="radiogroup" aria-label="Selected frames">
+        <label><input type="radio" name="mode" value="keep" checked>Keep</label>
+        <label><input type="radio" name="mode" value="remove">Remove</label>
+      </div>
+    </div>
+  </div>
+  <p class="hint" data-summary></p>
+</template>
+{{ad:result}}
+<section class="prose faq">
+  <h2>About cutting</h2>
+  <p>Cutting keeps each remaining frame's own timing. With the default quality of 100, the frames you keep are stored exactly as they were. Removing frames from a GIF is also one of the best ways to make the file smaller.</p>
+</section>

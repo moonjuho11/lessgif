@@ -1,0 +1,12 @@
+target/
+web/lessgif.wasm
+bench/data/
+__pycache__/
+site/dist/
+site/test/fixtures/
+site/test/out/
+site/test/decoder/edge/
+site/test/decoder/random/
+site/test/decoder/trunc/
+site/test/decoder/results/
+site/test/decoder/wikimedia/

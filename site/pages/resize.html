@@ -1,0 +1,27 @@
+<!-- {"path": "resize/", "script": "resize",
+  "title": "Resize GIF: change GIF width and height online | lessgif",
+  "description": "Resize an animated GIF to any width and height in your browser, keeping its animation and transparency. Free, no upload, no watermark."} -->
+<h1>Resize GIF</h1>
+<p class="lead">Change the width and height of an animated GIF. Every frame is resized smoothly and transparency is kept.</p>
+<div id="tool"></div>
+<template id="opts">
+  <div class="row">
+    <label class="field"><span>Width</span><input type="number" name="w" min="1" max="4096"></label>
+    <label class="field"><span>Height</span><input type="number" name="h" min="1" max="4096"></label>
+    <label class="inline" style="align-self:end;padding-bottom:8px"><input type="checkbox" name="lock" checked> Keep proportions</label>
+  </div>
+  <div class="row" data-presets>
+    <button type="button" class="btn small secondary" data-k="0.25">25%</button>
+    <button type="button" class="btn small secondary" data-k="0.5">50%</button>
+    <button type="button" class="btn small secondary" data-k="0.75">75%</button>
+    <button type="button" class="btn small secondary" data-k="1">Original</button>
+    <button type="button" class="btn small secondary" data-k="2">200%</button>
+  </div>
+</template>
+{{ad:result}}
+<section class="prose faq">
+  <h2>Resizing tips</h2>
+  <p>Making a GIF smaller in size is the most effective way to make the file smaller: half the width and height is usually around a third of the bytes. Enlarging a GIF can't add detail, but it can make pixel art or small stickers bigger without blurring too much.</p>
+  <h3>Will it lose quality?</h3>
+  <p>Resizing creates new in-between colours, so the GIF has to be re-encoded with a fresh palette. The default quality of 90 keeps it very close to a perfect resize. Use Compress afterwards if you want a smaller file.</p>
+</section>

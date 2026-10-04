@@ -1,0 +1,14 @@
+[package]
+name = "lessgif-wasm"
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/moonjuho11/lessgif"
+description = "WebAssembly build of lessgif with a small hand-written C ABI (no wasm-bindgen)"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+lessgif = { path = "..", default-features = false }

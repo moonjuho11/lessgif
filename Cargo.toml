@@ -1,0 +1,52 @@
+[package]
+name = "lessgif"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.88"
+description = "Animated GIF encoder that makes dithering, frame differencing and lossy LZW one decision per pixel"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/moonjuho11/lessgif"
+homepage = "https://lessgif.com"
+readme = "README.md"
+keywords = ["gif", "encoder", "animation", "compression", "wasm"]
+categories = ["multimedia::images", "multimedia::encoding", "compression"]
+exclude = ["/bench", "/web", "/wasm", "/site", "/.github"]
+
+[lib]
+crate-type = ["rlib"]
+
+[[bin]]
+name = "lessgif"
+required-features = ["cli"]
+
+[features]
+default = ["cli"]
+# The command-line tool. Library users can turn it off (default-features = false) to drop the
+# `image` dependency: the encoder itself has no dependencies.
+cli = ["dep:image"]
+
+[dependencies]
+image = { version = "0.25", default-features = false, features = ["png", "gif"], optional = true }
+
+[dev-dependencies]
+image = { version = "0.25", default-features = false, features = ["gif"] }
+
+# The round-trip tests encode a few hundred small clips; unoptimised that takes minutes.
+[profile.test]
+opt-level = 3
+
+[lints.clippy]
+too_many_arguments = "allow"
+type_complexity = "allow"
+should_implement_trait = "allow"
+
+[workspace]
+members = ["wasm"]
+
+# Browser build: cargo build -p lessgif-wasm --profile wasm --target wasm32-unknown-unknown
+[profile.wasm]
+inherits = "release"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
