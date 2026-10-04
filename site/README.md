@@ -61,9 +61,10 @@ Chromium's own decoder.
 The `Website` workflow builds the site on every push and can publish it from `main`:
 
 - **Cloudflare Pages** (recommended: free, unlimited bandwidth, and fine for a site with ads).
-  Create a Pages project, then add the repository secrets `CLOUDFLARE_API_TOKEN` and
-  `CLOUDFLARE_ACCOUNT_ID` and the variable `CLOUDFLARE_PROJECT`. `static/_headers` sets
-  Cloudflare's response headers.
+  Add the repository secrets `CLOUDFLARE_API_TOKEN` (a token with the "Cloudflare Pages: Edit"
+  permission) and `CLOUDFLARE_ACCOUNT_ID`, and the variable `CLOUDFLARE_PROJECT` (any name, such
+  as `lessgif`): the first run creates the Pages project. Then add your domain under the
+  project's Custom domains. `static/_headers` sets Cloudflare's response headers.
 - **GitHub Pages**: set Settings > Pages > Source to "GitHub Actions" and add the variable
   `PAGES_DEPLOY` = `true`. GitHub's terms don't allow sites run mainly for business, so move to
   another host before adding ads.
