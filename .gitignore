@@ -10,3 +10,6 @@ site/test/decoder/random/
 site/test/decoder/trunc/
 site/test/decoder/results/
 site/test/decoder/wikimedia/
+.github/banner/frames/
+.github/banner/social/
+.github/banner/inter.woff2
