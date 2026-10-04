@@ -22,6 +22,50 @@ in the browser.
 The video benchmark can be reproduced with the scripts in [`bench/`](bench/). Read the
 [caveats](#caveats) before quoting these numbers.
 
+## See for yourself
+
+Each row is the same 3-second clip, 360 pixels wide at 15 fps, made into a GIF by ffmpeg 6.1 (its
+usual `palettegen` and `paletteuse` recipe) and gifski 1.34 at their default settings, and by
+lessgif at the lowest quality whose GIF scores at least as high as the better of the two. The
+score is SSIMULACRA2 against the source frames (higher is better), so no lessgif GIF here is a
+lower-quality copy. Up close, lessgif's GIFs show a little more fine grain in flat areas; judge
+the trade for yourself. [`bench/showcase.py`](bench/showcase.py) makes them all again.
+
+<!-- showcase -->
+
+#### Cartoon: Big Buck Bunny
+
+| ffmpeg | gifski | lessgif |
+|---|---|---|
+| <img src="docs/compare/bunny-ffmpeg.gif" width="280" alt="ffmpeg"> | <img src="docs/compare/bunny-gifski.gif" width="280" alt="gifski"> | <img src="docs/compare/bunny-lessgif.gif" width="280" alt="lessgif"> |
+| 1,181 KB, score 76.5 | 824 KB, score 76.0 | **490 KB**, score 76.6<br>41% smaller than gifski,<br>59% smaller than ffmpeg |
+
+#### Live action: Tears of Steel
+
+| ffmpeg | gifski | lessgif |
+|---|---|---|
+| <img src="docs/compare/steel-ffmpeg.gif" width="280" alt="ffmpeg"> | <img src="docs/compare/steel-gifski.gif" width="280" alt="gifski"> | <img src="docs/compare/steel-lessgif.gif" width="280" alt="lessgif"> |
+| 1,461 KB, score 83.8 | 671 KB, score 78.7 | **403 KB**, score 83.9<br>40% smaller than gifski,<br>72% smaller than ffmpeg |
+
+#### Screen recording: this project's website
+
+| ffmpeg | gifski | lessgif |
+|---|---|---|
+| <img src="docs/compare/screen-ffmpeg.gif" width="280" alt="ffmpeg"> | <img src="docs/compare/screen-gifski.gif" width="280" alt="gifski"> | <img src="docs/compare/screen-lessgif.gif" width="280" alt="lessgif"> |
+| 663 KB, score 92.8 | 529 KB, score 81.6 | **437 KB**, score 92.8<br>17% smaller than gifski,<br>34% smaller than ffmpeg |
+
+#### Re-compressing a GIF: ffmpeg's GIF from the first row, scored against itself
+
+| input (ffmpeg) | gifsicle `-O3 --lossy=35` | lessgif |
+|---|---|---|
+| <img src="docs/compare/bunny-ffmpeg.gif" width="280" alt="ffmpeg"> | <img src="docs/compare/bunny-regif-gifsicle.gif" width="280" alt="gifsicle"> | <img src="docs/compare/bunny-regif-lessgif.gif" width="280" alt="lessgif"> |
+| 1,181 KB | 936 KB, score 75.4 | **508 KB**, score 76.2<br>46% smaller than gifsicle |
+
+<!-- /showcase -->
+
+Big Buck Bunny © 2008 Blender Foundation, [bigbuckbunny.org](https://peach.blender.org); Tears of
+Steel © 2012 Blender Foundation, [mango.blender.org](https://mango.blender.org); both CC BY 3.0.
+
 ## How it works
 
 A GIF encoder normally runs separate stages: pick a palette and dither, mark unchanged pixels

@@ -10,7 +10,7 @@ homepage = "https://lessgif.com"
 readme = "README.md"
 keywords = ["gif", "encoder", "animation", "compression", "wasm"]
 categories = ["multimedia::images", "multimedia::encoding", "compression"]
-exclude = ["/bench", "/web", "/wasm", "/site", "/.github"]
+exclude = ["/bench", "/docs", "/web", "/wasm", "/site", "/.github"]
 
 [lib]
 crate-type = ["rlib"]

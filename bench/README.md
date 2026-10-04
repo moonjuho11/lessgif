@@ -44,3 +44,19 @@ restarted. Set `JOBS` to change the number of parallel encodes.
 
 Results depend a little on the versions of ffmpeg (frame extraction), gifski and the metrics.
 `fetch.sh` warns if a downloaded source differs from the one the published numbers used.
+
+## The comparison GIFs in the README
+
+`showcase.py` makes the side-by-side GIFs in the main README's "See for yourself" section and
+rewrites the tables between its `<!-- showcase -->` markers. It downloads the two Blender films it
+needs (about 500 MB), and also needs gifsicle. The screen-recording clip is 45 screenshots of the
+website scrolling, taken by `showcase-screen.mjs` (needs Playwright and a built site):
+
+```sh
+node site/build.mjs && node bench/showcase-screen.mjs
+python3 bench/showcase.py
+```
+
+ffmpeg and gifski run at their default settings; lessgif runs at the lowest `--quality` whose GIF
+scores at least as high as the better of the two, found by bisection. The re-compression row runs
+gifsicle with `-O3 --lossy=35` and scores both outputs against the frames of the input GIF.
