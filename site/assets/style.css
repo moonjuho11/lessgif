@@ -58,7 +58,8 @@ pre { background: var(--soft); border: 1px solid var(--line); border-radius: 8px
 .top { background: var(--card); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 10; }
 .top-in { max-width: 1180px; margin: 0 auto; padding: 0 16px; display: flex; align-items: center; gap: 18px; height: 56px; }
 .logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 1.15rem; color: var(--fg); text-decoration: none; flex: none; }
-.logo svg { width: 28px; height: 28px; color: var(--accent); }
+.logo svg { display: block; height: 26px; width: 81px; fill: currentColor; }
+.logo .dot { fill: var(--accent); }
 .tools-nav { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; flex: 1; min-width: 0; }
 .tools-nav::-webkit-scrollbar { display: none; }
 .tools-nav a { color: var(--muted); text-decoration: none; padding: 6px 10px; border-radius: 6px; white-space: nowrap; font-size: 0.94rem; }

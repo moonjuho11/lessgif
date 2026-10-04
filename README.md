@@ -1,6 +1,6 @@
 <p align="center">
   <img src=".github/banner.gif" width="100%" alt="lessgif: smaller animated GIFs. Encoder, desktop app and in-browser tools. Open source.">
-  <br><sub>This banner is itself a GIF made by lessgif: 1280×400, 32 frames, 192 KB.</sub>
+  <br><sub>This banner is itself a GIF made by lessgif: 1280×400, 32 frames, 191 KB.</sub>
 </p>
 
 # lessgif
