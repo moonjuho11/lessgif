@@ -97,6 +97,9 @@ clip is. Large frames can be split into bands that encode on separate threads.
 ## Install and use
 
 Ready-made apps for Windows, macOS and Linux are on the [releases page](../../releases/latest).
+Each release lists the files' SHA-256 checksums in `SHA256SUMS.txt`, and GitHub keeps a signed
+record that this repository's release workflow built them, which the
+[GitHub CLI](https://cli.github.com) can check: `gh attestation verify lessgif-x86_64-pc-windows-msvc.zip --repo moonjuho11/lessgif`.
 Or build it yourself:
 
 ```sh
@@ -235,6 +238,10 @@ synthetic clips through the `image` crate's decoder.
   only where each frame's changed pixels fit in 255 colours.
 - **One encoder, one design.** lessgif is close to the limit of its single-pass design; the last
   ideas tried each gained under half a percent.
+
+## Security
+
+Please report security problems privately, as described in [SECURITY.md](SECURITY.md).
 
 ## License
 

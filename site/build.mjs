@@ -40,6 +40,25 @@ const NAV = [
 
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
+// The Content-Security-Policy of every page, sent in a <meta> tag and, on Cloudflare, as a header
+// (static/_headers). Only the site's own files may run; 'wasm-unsafe-eval' lets the encoder's
+// WebAssembly compile, and pictures and videos the page makes itself are blob: URLs. Nothing can be
+// sent to another site. AdSense loads code, pictures and frames from many Google hosts, so with ads
+// on, those may come from any https: address.
+const csp = [
+  "default-src 'self'",
+  ads ? "script-src 'self' 'wasm-unsafe-eval' 'unsafe-inline' 'unsafe-eval' https:" : "script-src 'self' 'wasm-unsafe-eval'",
+  "style-src 'self' 'unsafe-inline'",
+  `img-src 'self' data: blob:${ads ? ' https:' : ''}`,
+  "media-src 'self' blob:",
+  `connect-src 'self'${ads ? ' https:' : ''}`,
+  ...(ads ? ['frame-src https:'] : []),
+  "worker-src 'self'",
+  "object-src 'none'",
+  "base-uri 'none'",
+  "form-action 'self'",
+].join('; ');
+
 function adSlot(name) {
   if (!ads) return `<div class="ad ad-${name}" data-ad="${name}" hidden></div>`;
   return `<div class="ad ad-${name}" data-ad="${name}"><ins class="adsbygoogle" style="display:block" data-ad-client="${esc(ads.client)}" data-ad-slot="${esc(ads.slots?.[name] || '')}" data-ad-format="auto" data-full-width-responsive="true"></ins></div>`;
@@ -69,10 +88,12 @@ for (const file of readdirSync(join(here, 'pages')).sort()) {
     root: rel,
     nav,
     repo: repoUrl,
+    repoName: esc(cfg.repo),
     year: String(new Date().getUTCFullYear()),
     head: ads ? `<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${esc(ads.client)}" crossorigin="anonymous"></script>` : '',
     script: meta.script ? `<script type="module" src="${rel}assets/tools/${meta.script}.js"></script>` : '',
     adsOn: ads ? '1' : '',
+    csp,
   };
   // text that only applies with (or without) ads: <!--ads-->...<!--/ads-->, <!--noads-->...<!--/noads-->
   body = body.replace(ads ? /<!--noads-->[\s\S]*?<!--\/noads-->/g : /<!--ads-->[\s\S]*?<!--\/ads-->/g, '');
@@ -92,6 +113,7 @@ cpSync(join(here, 'assets'), join(out, 'assets'), { recursive: true });
 cpSync(join(root, 'web', 'lessgif.js'), join(out, 'assets', 'lessgif.js'));
 cpSync(wasm, join(out, 'assets', 'lessgif.wasm'));
 cpSync(join(here, 'static'), out, { recursive: true });
+writeFileSync(join(out, '_headers'), readFileSync(join(out, '_headers'), 'utf8').replace(/\{\{csp\}\}/g, csp));
 
 writeFileSync(join(out, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">

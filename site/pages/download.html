@@ -21,7 +21,7 @@ lessgif big.gif small.gif --max-size 8M       # best quality that fits in 8 MB
 lessgif frames/ anim.gif --fps 12             # a folder of PNG frames
 lessgif --help                                # every option</pre>
   <h3>"Unknown developer" warnings</h3>
-  <p>The apps aren't signed with a paid certificate yet. On macOS, if it says the app can't be checked, run <code>xattr -d com.apple.quarantine lessgif</code> once in the folder you unpacked it to. On Windows, SmartScreen may ask you to confirm with <b>More info</b>, then <b>Run anyway</b>. The download page's checksums let you verify the files.</p>
+  <p>The apps aren't signed with a paid certificate yet. On macOS, if it says the app can't be checked, run <code>xattr -d com.apple.quarantine lessgif</code> once in the folder you unpacked it to. On Windows, SmartScreen may ask you to confirm with <b>More info</b>, then <b>Run anyway</b>. To check that a file is the one this project built, compare it with <code>SHA256SUMS.txt</code> on the <a href="{{repo}}/releases/latest">release page</a>, or run <code>gh attestation verify &lt;file&gt; --repo {{repoName}}</code> with the <a href="https://cli.github.com">GitHub CLI</a>.</p>
 
   <h2>For developers</h2>
   <h3>Rust</h3>

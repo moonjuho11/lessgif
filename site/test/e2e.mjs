@@ -20,17 +20,28 @@ const outDir = join(here, 'out');
 mkdirSync(outDir, { recursive: true });
 const only = process.argv[2] ? new RegExp(process.argv[2]) : null;
 
-// ---- static server
+// ---- static server, sending the headers Cloudflare would send (from dist/_headers)
+function headerRules(text) {
+  const rules = [];
+  for (const line of text.split('\n')) {
+    if (!line.trim() || line.startsWith('#')) continue;
+    if (!/^\s/.test(line)) rules.push({ re: new RegExp(`^${line.trim().replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*')}$`), headers: [] });
+    else rules.at(-1).headers.push([line.slice(0, line.indexOf(':')).trim(), line.slice(line.indexOf(':') + 1).trim()]);
+  }
+  return (path) => Object.fromEntries(rules.filter((r) => r.re.test(path)).flatMap((r) => r.headers));
+}
+const headersFor = headerRules(readFileSync(join(dist, '_headers'), 'utf8'));
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.wasm': 'application/wasm', '.svg': 'image/svg+xml', '.xml': 'application/xml', '.txt': 'text/plain', '.woff2': 'font/woff2', '.png': 'image/png' };
 const server = createServer((req, res) => {
-  let p = decodeURIComponent(new URL(req.url, 'http://x').pathname);
+  const url = decodeURIComponent(new URL(req.url, 'http://x').pathname);
+  let p = url;
   if (p.endsWith('/')) p += 'index.html';
   const f = join(dist, p);
   if (!f.startsWith(dist) || !existsSync(f) || statSync(f).isDirectory()) {
     res.writeHead(404).end('not found');
     return;
   }
-  res.writeHead(200, { 'Content-Type': MIME[extname(f)] || 'application/octet-stream' }).end(readFileSync(f));
+  res.writeHead(200, { 'Content-Type': MIME[extname(f)] || 'application/octet-stream', ...headersFor(url) }).end(readFileSync(f));
 });
 await new Promise((ok) => server.listen(0, '127.0.0.1', ok));
 const base = `http://127.0.0.1:${server.address().port}`;
@@ -56,14 +67,10 @@ async function run(page, timeout = 180000) {
   await page.waitForFunction(() => !document.querySelector('#result')?.hidden || !document.querySelector('.note.err')?.hidden, null, { timeout });
   const err = await page.$eval('.note.err', (e) => (e.hidden ? null : e.textContent));
   if (err) throw new Error(`the page showed an error: ${err}`);
-  const b64 = await page.$eval('#result a[download]', async (a) => {
-    const buf = new Uint8Array(await (await fetch(a.href)).arrayBuffer());
-    let s = '';
-    for (let i = 0; i < buf.length; i += 0x8000) s += String.fromCharCode(...buf.subarray(i, i + 0x8000));
-    return btoa(s);
-  });
+  // download the result the way a visitor does (the page's policy doesn't let scripts fetch it)
+  const [download] = await Promise.all([page.waitForEvent('download'), page.click('#result a[download]')]);
   const facts = await page.$eval('#result .facts', (e) => e.textContent);
-  return { bytes: new Uint8Array(Buffer.from(b64, 'base64')), facts };
+  return { bytes: new Uint8Array(readFileSync(await download.path())), facts };
 }
 const read = (n) => new Uint8Array(readFileSync(fx(n)));
 const dur = (g) => g.delays.reduce((a, b) => a + b, 0);
@@ -581,6 +588,34 @@ await test('GIF to MP4: every frame with its timing, even size, plays back', asy
   }
   await page.close();
   return notes.join('; ');
+});
+
+await test("only the site's own code runs, nothing is sent elsewhere, and no other site can frame it", async () => {
+  const page = await ctx.newPage(); // not open(): the blocked attempts below log console errors on purpose
+  const res = await page.goto(`${base}/compress/`);
+  const h = res.headers();
+  assert.match(h['content-security-policy'], /script-src 'self' 'wasm-unsafe-eval';.*frame-ancestors 'none'$/);
+  assert.equal(h['x-frame-options'], 'DENY');
+  assert.match(h['strict-transport-security'], /^max-age=31536000/);
+  assert.equal(await page.$eval('meta[http-equiv=Content-Security-Policy]', (m) => m.content), h['content-security-policy'].replace(/; frame-ancestors 'none'$/, ''));
+  const blocked = await page.evaluate(async () => {
+    const seen = [];
+    document.addEventListener('securitypolicyviolation', (e) => seen.push(e.effectiveDirective));
+    const inline = document.createElement('script');
+    inline.textContent = 'window.inlineRan = true';
+    document.head.append(inline);
+    const outside = document.createElement('script');
+    outside.src = 'https://example.com/x.js';
+    document.head.append(outside);
+    await fetch('https://example.com/collect', { method: 'POST', body: 'x' }).catch(() => {});
+    await new Promise((ok) => setTimeout(ok, 200));
+    return { inlineRan: !!window.inlineRan, seen: [...new Set(seen)].sort() };
+  });
+  assert.deepEqual(blocked, { inlineRan: false, seen: ['connect-src', 'script-src-elem'] });
+  await page.setContent(`<iframe src="${base}/compress/"></iframe>`);
+  await page.waitForTimeout(1000);
+  assert.equal(await page.frames()[1]?.$('header.top').catch(() => null) ?? null, null, 'the site showed inside another page');
+  await page.close();
 });
 
 await test('download, about and privacy pages render', async () => {

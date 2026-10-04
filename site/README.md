@@ -59,10 +59,12 @@ sh site/test/make-fixtures.sh        # test inputs (needs ffmpeg and Python with
 node site/test/e2e.mjs               # every page in Chromium (needs Playwright)
 ```
 
-`e2e.mjs` uploads files to each page, runs it, and decodes the GIF the page made: crop, cut,
-speed, reverse and rotate at quality 100 must match the expected frames exactly. Split must give
-back every frame exactly as PNG, and GIF to MP4 must write one video frame per GIF frame with the
-same timing, in a file the browser plays. Playwright's own Chromium has no H.264 encoder, so
+`e2e.mjs` serves the site with the headers from `_headers`, uploads files to each page, runs it,
+and decodes the GIF the page made: crop, cut, speed, reverse and rotate at quality 100 must match
+the expected frames exactly. Split must give back every frame exactly as PNG, and GIF to MP4 must
+write one video frame per GIF frame with the same timing, in a file the browser plays. It also
+checks that the pages run no outside or inline scripts, send nothing to other sites, and can't be
+shown in another site's frame. Playwright's own Chromium has no H.264 encoder, so
 there GIF to MP4 makes VP9; to test H.264 as well, point `CHROME` at a Chrome or Chrome for
 Testing binary. Screenshots land in `site/test/out/`. `site/test/decoder/` holds the checks of
 the GIF reader against Chromium's own decoder.
@@ -79,6 +81,12 @@ The `Website` workflow builds the site on every push and can publish it from `ma
 - **GitHub Pages**: set Settings > Pages > Source to "GitHub Actions" and add the variable
   `PAGES_DEPLOY` = `true`. GitHub's terms don't allow sites run mainly for business, so move to
   another host before adding ads.
+
+Every page carries a Content-Security-Policy that lets only the site's own files run and send
+nothing to other sites (the build loosens it for AdSense once ads are on). On Cloudflare,
+`static/_headers` also sends it as a header, along with HTTPS-only (HSTS) and a ban on other sites
+showing the pages in a frame; GitHub Pages can't send headers, so there only the page's own policy
+applies.
 
 Set the variable `SITE_URL` to the site's real address. All links inside the site are
 relative, so it also works from a sub-folder such as `user.github.io/lessgif/`.

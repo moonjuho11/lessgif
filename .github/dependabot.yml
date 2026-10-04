@@ -1,0 +1,18 @@
+# Weekly pull requests that update the GitHub Actions the workflows use and the Rust dependencies,
+# one per kind. Security fixes come sooner, as Dependabot alerts.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
+  - package-ecosystem: cargo
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      rust:
+        patterns: ["*"]
