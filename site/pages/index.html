@@ -1,34 +1,62 @@
 <!-- {"path": "", "script": "home",
   "title": "lessgif: smaller GIFs, made in your browser",
   "description": "Free GIF tools that run in your browser: video to GIF, GIF compressor, resize, crop, cut, speed, reverse, add text, split into frames and GIF to MP4. Nothing is uploaded, and the open-source lessgif encoder makes unusually small GIFs."} -->
-<section class="hero">
-  <h1>Smaller GIFs, made in your browser</h1>
-  <p class="lead">Turn videos into GIFs, and compress, resize, crop and edit the GIFs you have. Nothing is uploaded: everything runs on your device, with an open-source encoder built to make small GIFs.</p>
-</section>
-<div id="tool"></div>
-<div class="grid-tools">
-  <a href="video-to-gif/"><b>Video to GIF</b><span>MP4, WebM or MOV to an animated GIF</span></a>
-  <a href="compress/"><b>Compress GIF</b><span>Make a GIF smaller, or fit a size limit</span></a>
-  <a href="maker/"><b>Images to GIF</b><span>Build an animation from pictures</span></a>
-  <a href="resize/"><b>Resize GIF</b><span>Change width and height</span></a>
-  <a href="crop/"><b>Crop GIF</b><span>Keep part of the picture</span></a>
-  <a href="cut/"><b>Cut GIF</b><span>Trim or remove frames</span></a>
-  <a href="speed/"><b>Change speed</b><span>Faster, slower, or even timing</span></a>
-  <a href="reverse/"><b>Reverse GIF</b><span>Backwards or boomerang</span></a>
-  <a href="rotate/"><b>Rotate and flip</b><span>Turn or mirror a GIF</span></a>
-  <a href="add-text/"><b>Add text</b><span>Captions and meme text</span></a>
-  <a href="split/"><b>Split into frames</b><span>Every frame as a PNG or JPG</span></a>
-  <a href="gif-to-mp4/"><b>GIF to MP4</b><span>A video, usually far smaller</span></a>
+<div class="intro">
+  <div>
+    <p class="eyebrow">Open-source GIF encoder · runs in your browser</p>
+    <h1>Make and compress GIFs in your browser</h1>
+    <p class="lead">Turn videos into GIFs, and compress, resize, crop and edit the GIFs you have. Nothing is uploaded: the lessgif encoder runs on your device as WebAssembly.</p>
+    <div id="tool"></div>
+  </div>
+  <section class="card">
+    <h2>Specs</h2>
+    <dl class="spec">
+      <div><dt>Encoder</dt><dd>lessgif {{version}}</dd></div>
+      <div><dt>Runtime</dt><dd>WebAssembly, {{wasmKB}} KB, in a worker</dd></div>
+      <div><dt>Uploads</dt><dd>none, 0 bytes</dd></div>
+      <div><dt>Input</dt><dd>MP4, WebM, MOV, GIF, WebP, PNG, JPEG</dd></div>
+      <div><dt>Output</dt><dd>GIF, MP4, PNG, JPEG</dd></div>
+      <div><dt>License</dt><dd>MIT or Apache-2.0</dd></div>
+      <div><dt>Source</dt><dd><a href="{{repo}}">{{repoName}}</a></dd></div>
+    </dl>
+  </section>
 </div>
-<h2>How small?</h2>
-<div class="stats">
-  <div><b>50% smaller</b><span>than gifski's GIFs at the same SSIMULACRA2 quality score, median of 363 film clips</span></div>
-  <div><b>40% smaller</b><span>than gifsicle's lossy optimizer at the same quality, median of 281 GIFs</span></div>
-  <div><b>0 uploads</b><span>your files are processed in this tab and never sent anywhere</span></div>
+
+<h2 class="sec">Tools</h2>
+<ol class="index">
+  <li><a href="video-to-gif/"><b>Video to GIF</b><span>MP4, WebM or MOV to an animated GIF</span></a></li>
+  <li><a href="compress/"><b>Compress GIF</b><span>Make a GIF smaller, or fit a size limit</span></a></li>
+  <li><a href="maker/"><b>Images to GIF</b><span>Build an animation from pictures</span></a></li>
+  <li><a href="resize/"><b>Resize GIF</b><span>Change width and height</span></a></li>
+  <li><a href="crop/"><b>Crop GIF</b><span>Keep part of the picture</span></a></li>
+  <li><a href="cut/"><b>Cut GIF</b><span>Trim or remove frames</span></a></li>
+  <li><a href="speed/"><b>Change speed</b><span>Faster, slower, or even timing</span></a></li>
+  <li><a href="reverse/"><b>Reverse GIF</b><span>Backwards or boomerang</span></a></li>
+  <li><a href="rotate/"><b>Rotate and flip</b><span>Turn or mirror a GIF</span></a></li>
+  <li><a href="add-text/"><b>Add text</b><span>Captions and meme text</span></a></li>
+  <li><a href="split/"><b>Split into frames</b><span>Every frame as a PNG or JPG</span></a></li>
+  <li><a href="gif-to-mp4/"><b>GIF to MP4</b><span>A video, usually far smaller</span></a></li>
+</ol>
+
+<h2 class="sec">Benchmark</h2>
+<div class="bench">
+  <section class="card">
+    <h3>Video to GIF</h3>
+    <p class="set">363 film clips · against gifski 1.34</p>
+    <div class="meter"><span>gifski</span><div><i style="width:100%"></i></div><b>100</b></div>
+    <div class="meter me"><span>lessgif</span><div><i style="width:50%"></i></div><b>50</b></div>
+  </section>
+  <section class="card">
+    <h3>Compress GIF</h3>
+    <p class="set">281 GIFs · against gifsicle 1.94 lossy</p>
+    <div class="meter"><span>gifsicle</span><div><i style="width:100%"></i></div><b>100</b></div>
+    <div class="meter me"><span>lessgif</span><div><i style="width:60%"></i></div><b>60</b></div>
+  </section>
 </div>
-<p class="hint">Measured with a perceptual quality metric, not yet with a blind viewing test; up close, lessgif's GIFs show a bit more fine grain in flat areas. <a href="{{repo}}#benchmark">How it was measured</a>.</p>
+<p class="hint">Median file size at the same SSIMULACRA2 score, a perceptual quality metric, with the other tool's size as 100. There has been no blind viewing test yet, and up close lessgif's GIFs show a bit more fine grain in flat areas. <a href="{{repo}}#benchmark">How it was measured</a>.</p>
 {{ad:result}}
-<section class="prose">
-  <h2>Free and open source</h2>
-  <p>The encoder behind this site, lessgif, is open source under the MIT or Apache-2.0 license. You can <a href="download/">download it as an app</a> for Windows, macOS and Linux, with no limits on file size or length, or use it in your own program or website. The code and the benchmark are on <a href="{{repo}}">GitHub</a>.</p>
-</section>
+
+<h2 class="sec">Command line</h2>
+<pre><span class="pr">$ </span>lessgif clip.mp4 clip.gif --quality 70
+<span class="pr">$ </span>lessgif big.gif small.gif --max-size 8M</pre>
+<p>The same encoder is an app for Windows, macOS and Linux, with no limits on file size or length. <a href="download/">Download it</a>, or read the code and the benchmark on <a href="{{repo}}">GitHub</a>.</p>

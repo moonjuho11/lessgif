@@ -1,25 +1,26 @@
 <!-- {"path": "download/", "script": "download",
   "title": "Download lessgif: GIF encoder app for Windows, macOS and Linux",
   "description": "Download the free, open-source lessgif GIF encoder for Windows, macOS and Linux, or use it in your own Rust program or web page."} -->
+<p class="eyebrow">lessgif {{version}} · command-line app</p>
 <h1>Download lessgif</h1>
 <p class="lead">The same encoder as this website, as a command-line app. It has no limits on file size or length, uses all your processor's cores, and is free and open source.</p>
 <div class="dl" id="downloads">
-  <a data-os="windows" href="{{repo}}/releases/latest/download/lessgif-x86_64-pc-windows-msvc.zip"><b>Windows</b><span>64-bit, .zip</span></a>
-  <a data-os="mac" href="{{repo}}/releases/latest/download/lessgif-universal-apple-darwin.tar.gz"><b>macOS</b><span>Apple silicon and Intel, .tar.gz</span></a>
-  <a data-os="linux" href="{{repo}}/releases/latest/download/lessgif-x86_64-unknown-linux-musl.tar.gz"><b>Linux</b><span>x86-64, .tar.gz</span></a>
-  <a data-os="linux-arm" href="{{repo}}/releases/latest/download/lessgif-aarch64-unknown-linux-musl.tar.gz"><b>Linux ARM</b><span>64-bit ARM (Raspberry Pi 4 and newer), .tar.gz</span></a>
+  <a data-os="windows" href="{{repo}}/releases/latest/download/lessgif-x86_64-pc-windows-msvc.zip"><b>Windows</b><span>x86-64, .zip</span><code>lessgif-x86_64-pc-windows-msvc.zip</code></a>
+  <a data-os="mac" href="{{repo}}/releases/latest/download/lessgif-universal-apple-darwin.tar.gz"><b>macOS</b><span>Apple silicon and Intel, .tar.gz</span><code>lessgif-universal-apple-darwin.tar.gz</code></a>
+  <a data-os="linux" href="{{repo}}/releases/latest/download/lessgif-x86_64-unknown-linux-musl.tar.gz"><b>Linux</b><span>x86-64, .tar.gz</span><code>lessgif-x86_64-unknown-linux-musl.tar.gz</code></a>
+  <a data-os="linux-arm" href="{{repo}}/releases/latest/download/lessgif-aarch64-unknown-linux-musl.tar.gz"><b>Linux ARM</b><span>64-bit ARM (Raspberry Pi 4 and newer), .tar.gz</span><code>lessgif-aarch64-unknown-linux-musl.tar.gz</code></a>
 </div>
 <p class="hint"><a href="{{repo}}/releases/latest">All files and checksums</a> · <a href="{{repo}}/releases">Older versions</a> · <a href="{{repo}}">Source code</a></p>
 
 <section class="prose">
   <h2>Using it</h2>
   <p>Unpack the download and run <code>lessgif</code> from a terminal. Making GIFs from videos needs <a href="https://ffmpeg.org/download.html">ffmpeg</a> installed as well (<code>winget install ffmpeg</code> on Windows, <code>brew install ffmpeg</code> on macOS, or your Linux package manager). GIFs and folders of PNG frames work without it.</p>
-<pre>lessgif clip.mp4 clip.gif                     # video to GIF, 15 fps, up to 480 px
+<pre>lessgif clip.mp4 clip.gif                     <span class="cm"># video to GIF, 15 fps, up to 480 px</span>
 lessgif clip.mp4 clip.gif --quality 85 --fps 20 --max-side 640
-lessgif big.gif small.gif --quality 70        # re-compress a GIF
-lessgif big.gif small.gif --max-size 8M       # best quality that fits in 8 MB
-lessgif frames/ anim.gif --fps 12             # a folder of PNG frames
-lessgif --help                                # every option</pre>
+lessgif big.gif small.gif --quality 70        <span class="cm"># re-compress a GIF</span>
+lessgif big.gif small.gif --max-size 8M       <span class="cm"># best quality that fits in 8 MB</span>
+lessgif frames/ anim.gif --fps 12             <span class="cm"># a folder of PNG frames</span>
+lessgif --help                                <span class="cm"># every option</span></pre>
   <h3>"Unknown developer" warnings</h3>
   <p>The apps aren't signed with a paid certificate yet. On macOS, if it says the app can't be checked, run <code>xattr -d com.apple.quarantine lessgif</code> once in the folder you unpacked it to. On Windows, SmartScreen may ask you to confirm with <b>More info</b>, then <b>Run anyway</b>. To check that a file is the one this project built, compare it with <code>SHA256SUMS.txt</code> on the <a href="{{repo}}/releases/latest">release page</a>, or run <code>gh attestation verify &lt;file&gt; --repo {{repoName}}</code> with the <a href="https://cli.github.com">GitHub CLI</a>.</p>
 

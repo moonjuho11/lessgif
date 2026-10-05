@@ -19,6 +19,7 @@ const framesCard = el('section', { class: 'card', hidden: true }, el('h2', {}, '
 
 const form = el('form', { class: 'card opts', hidden: true, novalidate: true });
 form.innerHTML = `
+  <h2>Settings</h2>
   <div class="field"><span>Delay for every frame (milliseconds)</span>
     <div class="row" style="gap:8px"><input type="number" name="all" min="20" step="10" value="200" aria-label="Delay for every frame"><button type="button" class="btn small secondary" data-setall>Set all</button></div>
     <small>New pictures get this delay. Each frame's own delay is in the box under it.</small>

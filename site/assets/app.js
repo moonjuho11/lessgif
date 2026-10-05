@@ -40,6 +40,9 @@ export const fmt = {
   loop: (l) => (l === 0 ? 'loops forever' : l == null ? 'plays once' : `repeats ${l} time${l === 1 ? '' : 's'}`),
 };
 
+// One labelled value in a .facts list. Its text still reads "Size: 2 MB"; the colon is only hidden.
+export const fact = (k, ...v) => el('li', {}, el('span', { class: 'k' }, k, el('span', { class: 'c' }, ': ')), el('b', {}, ...v));
+
 export const stem = (name) => (name || 'animation').replace(/\.[^.]+$/, '').replace(/-(small|resized|cropped|cut|speed|reversed|rotated|text)$/, '') || 'animation';
 
 // ---------------------------------------------------------------- passing files between tools
@@ -279,7 +282,7 @@ export function resultBox({ current, verb = 'Made' }) {
     facts,
     note,
     el('div', { class: 'actions' }, save, saveOrig),
-    el('div', { class: 'next' }, el('p', {}, 'Keep editing this GIF:'), next),
+    el('div', { class: 'next' }, el('p', {}, 'Keep editing this GIF'), next),
   );
   let url;
   return {
@@ -301,7 +304,7 @@ export function resultBox({ current, verb = 'Made' }) {
         items[0].push(d > 0 ? el('span', { class: 'saving' }, ` (${Math.round(d * 100)}% smaller)`) : el('span', { class: 'worse' }, ` (${Math.round(-d * 100)}% bigger)`));
       }
       items.push(['Dimensions', `${r.w} x ${r.h}`], ['Frames', String(r.n)], ['Length', fmt.secs(r.duration)], ['Quality', `${r.quality}${r.scale < 1 ? `, shrunk to ${Math.round(r.scale * 100)}% to fit` : ''}`], ['Took', `${(r.ms / 1000).toFixed(1)} s`]);
-      facts.replaceChildren(...items.map(([k, ...v]) => el('li', {}, `${k}: `, el('b', {}, ...v))));
+      facts.replaceChildren(...items.map(([k, ...v]) => fact(k, ...v)));
       note.hidden = true;
       saveOrig.hidden = true;
       if (keepOriginal && src?.size && blob.size >= src.size) {
@@ -388,9 +391,10 @@ export function gifTool(def) {
   const srcWarn = el('div', { class: 'note warn', hidden: true });
   const srcView = el('div', { class: 'preview', hidden: def.bigPreview === false }, el('figure', { class: 'shot' }, el('div', { class: 'frame' }, srcImg)));
   const another = el('button', { type: 'button', class: 'btn small secondary' }, 'Use another file');
-  const srcCard = el('section', { class: 'card', hidden: true }, srcView, srcFacts, srcWarn, el('div', { class: 'actions', style: 'margin-top:12px' }, another));
+  const srcCard = el('section', { class: 'card', hidden: true }, el('h2', {}, 'Input'), srcView, srcFacts, srcWarn, el('div', { class: 'actions', style: 'margin-top:12px' }, another));
   const go = el('button', { class: 'btn big', type: 'submit' }, def.verb);
   const form = el('form', { class: 'card opts', hidden: true, novalidate: true });
+  form.append(el('h2', {}, 'Settings'));
   if (tpl) form.append(tpl.content.cloneNode(true));
   if (output) form.append(el('h3', {}, 'Output'), output.el);
   form.append(el('div', { class: 'actions' }, go));
@@ -432,7 +436,7 @@ export function gifTool(def) {
           ['Frames', String(clip.frames.length)],
           ['Length', fmt.secs(dur)],
           ['Looping', fmt.loop(clip.loop)],
-        ].map(([k, v]) => el('li', {}, `${k}: `, el('b', {}, v))),
+        ].map(([k, v]) => fact(k, v)),
       );
       srcWarn.textContent = clip.warnings?.join(' ') || '';
       srcWarn.hidden = !clip.warnings?.length;

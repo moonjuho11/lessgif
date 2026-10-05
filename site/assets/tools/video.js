@@ -1,4 +1,4 @@
-import { $, el, engine, fmt, dropZone, outputControls, progressBox, errorBox, resultBox, handedOver } from '../app.js';
+import { $, el, engine, fmt, fact, dropZone, outputControls, progressBox, errorBox, resultBox, handedOver } from '../app.js';
 import { openVideo, videoFrames, checkBudget } from '../load.js';
 import { fit } from '../ops.js';
 
@@ -12,10 +12,11 @@ const output = outputControls({ quality: 70, sizeTarget: true, target: 8 });
 const player = el('video', { controls: true, muted: true, playsinline: true });
 const facts = el('ul', { class: 'facts' });
 const another = el('button', { type: 'button', class: 'btn small secondary' }, 'Use another video');
-const srcCard = el('section', { class: 'card', hidden: true }, el('div', { class: 'preview' }, el('figure', { class: 'shot' }, el('div', { class: 'frame' }, player))), facts, el('div', { class: 'actions', style: 'margin-top:12px' }, another));
+const srcCard = el('section', { class: 'card', hidden: true }, el('h2', {}, 'Input'), el('div', { class: 'preview' }, el('figure', { class: 'shot' }, el('div', { class: 'frame' }, player))), facts, el('div', { class: 'actions', style: 'margin-top:12px' }, another));
 
 const form = el('form', { class: 'card opts', hidden: true, novalidate: true });
 form.innerHTML = `
+  <h2>Settings</h2>
   <div class="row">
     <div class="field"><span>Start (seconds)</span><div class="row" style="gap:6px"><input type="number" name="start" min="0" step="0.1" value="0"><button type="button" class="btn small secondary" data-now="start">Use current</button></div></div>
     <div class="field"><span>End (seconds)</span><div class="row" style="gap:6px"><input type="number" name="end" min="0" step="0.1" value="5"><button type="button" class="btn small secondary" data-now="end">Use current</button></div></div>
@@ -93,7 +94,7 @@ async function setSource(fl) {
         ['Size', fmt.bytes(fl.size)],
         ['Dimensions', `${video.videoWidth} x ${video.videoHeight}`],
         ['Length', `${d.toFixed(1)} s`],
-      ].map(([k, v]) => el('li', {}, `${k}: `, el('b', {}, v))),
+      ].map(([k, v]) => fact(k, v)),
     );
     const small = Math.max(video.videoWidth, video.videoHeight) < 480;
     if (small) form.querySelector('[name=side][value="0"]').checked = true;

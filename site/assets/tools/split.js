@@ -1,4 +1,4 @@
-import { gifTool, el, fmt, frameThumbs, stem } from '../app.js';
+import { gifTool, el, fmt, fact, frameThumbs, stem } from '../app.js';
 import { zip } from '../zip.js';
 
 const resultCard = el('section', { class: 'card', hidden: true, id: 'result' });
@@ -95,7 +95,7 @@ function show(blob, files, fileName, ms) {
   ];
   resultCard.replaceChildren(
     el('h2', {}, 'Result'),
-    el('ul', { class: 'facts' }, ...facts.map(([k, v]) => el('li', {}, `${k}: `, el('b', {}, v)))),
+    el('ul', { class: 'facts' }, ...facts.map(([k, v]) => fact(k, v))),
     el('div', { class: 'actions', style: 'margin-top:12px' }, el('a', { class: 'btn', href: url, download: fileName }, 'Download ZIP')),
   );
   resultCard.hidden = false;

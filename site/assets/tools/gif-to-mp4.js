@@ -1,5 +1,5 @@
 // GIF to MP4 with the browser's own video encoder (WebCodecs), muxed by mp4mux.js.
-import { gifTool, el, fmt, stem } from '../app.js';
+import { gifTool, el, fmt, fact, stem } from '../app.js';
 import { mp4 } from '../mp4mux.js';
 
 // Quantizers: H.264 counts 0 to 51, VP9 (in WebCodecs) 0 to 63; lower is better.
@@ -231,7 +231,7 @@ function show(r, ms) {
   resultCard.replaceChildren(
     el('h2', {}, 'Result'),
     el('div', { class: 'preview' }, el('figure', { class: 'shot' }, el('div', { class: 'frame' }, video))),
-    el('ul', { class: 'facts' }, ...facts.map(([k, ...v]) => el('li', {}, `${k}: `, el('b', {}, ...v)))),
+    el('ul', { class: 'facts' }, ...facts.map(([k, ...v]) => fact(k, ...v))),
     ...(r.enc.kind === 'vp9' ? [el('div', { class: 'note warn' }, "This browser can't make H.264 video, so this MP4 uses VP9. It plays in browsers and on most phones, but some apps may not accept it; Chrome, Edge or Safari make H.264.")] : []),
     el('div', { class: 'actions', style: 'margin-top:12px' }, el('a', { class: 'btn', href: url, download: `${stem(ui.file.name)}.mp4` }, 'Download MP4')),
   );

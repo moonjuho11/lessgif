@@ -4,7 +4,7 @@
 // is wrapped in layout.html. Assets are copied as they are, plus the encoder (web/lessgif.js and
 // web/lessgif.wasm, which `sh web/build.sh` makes). Settings, including the ad account, are in
 // site.config.json; LESSGIF_BASE_URL overrides baseUrl.
-import { readFileSync, writeFileSync, mkdirSync, rmSync, cpSync, readdirSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, rmSync, cpSync, readdirSync, existsSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -15,12 +15,15 @@ const cfg = JSON.parse(readFileSync(join(here, 'site.config.json'), 'utf8'));
 const base = (process.env.LESSGIF_BASE_URL || cfg.baseUrl).replace(/\/$/, '');
 const repoUrl = `https://github.com/${cfg.repo}`;
 const ads = cfg.adsense?.client ? cfg.adsense : null;
+// shown in the header and on the home page
+const version = readFileSync(join(root, 'Cargo.toml'), 'utf8').match(/^version = "(.+)"$/m)[1];
 
 const wasm = join(root, 'web', 'lessgif.wasm');
 if (!existsSync(wasm)) {
   console.error('web/lessgif.wasm is missing: run `sh web/build.sh` first');
   process.exit(1);
 }
+const wasmKB = String(Math.round(statSync(wasm).size / 1024));
 
 // Navigation, in order. `short` is the label in the top bar.
 const NAV = [
@@ -90,6 +93,8 @@ for (const file of readdirSync(join(here, 'pages')).sort()) {
     repo: repoUrl,
     repoName: esc(cfg.repo),
     year: String(new Date().getUTCFullYear()),
+    version: esc(version),
+    wasmKB,
     head: ads ? `<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${esc(ads.client)}" crossorigin="anonymous"></script>` : '',
     script: meta.script ? `<script type="module" src="${rel}assets/tools/${meta.script}.js"></script>` : '',
     adsOn: ads ? '1' : '',
