@@ -310,47 +310,72 @@ function clippedRect(f, W, H) {
 
 function rectEmpty(r) { return !(r[0] < r[2] && r[1] < r[3]); }
 function rectEq(a, b) { return a[0] === b[0] && a[1] === b[1] && a[2] === b[2] && a[3] === b[3]; }
-function rectContains(a, b) {
-  return !rectEmpty(b) && !rectEmpty(a) && a[0] <= b[0] && a[1] <= b[1] && a[2] >= b[2] && a[3] >= b[3];
-}
 
 // Port of SkFrameHolder::setAlphaAndRequiredFrame (Skia), which decides whether a frame starts
-// from a transparent canvas (independent) or from an earlier frame.
+// from a transparent canvas (independent) or from an earlier frame. Skia walks back one frame at
+// a time, which takes quadratic time on long runs of "restore previous" frames or long chains of
+// frames built on each other (46 s for one 2 MB GIF); this gets the same answers in O(n log n).
 function computeRequiredFrames(frames, W, H) {
+  const n = frames.length;
   const screen = [0, 0, W, H];
   const onScreen = (f) => { const r = clippedRect(f, W, H); return rectEmpty(r) ? [0, 0, 0, 0] : r; };
-  for (let i = 0; i < frames.length; i++) {
-    const f = frames[i];
-    f.rect = clippedRect(f, W, H);
-    if (i === 0) { f.requiredFrame = -1; continue; }
+  // Required frames form a forest. Each frame also gets a skip pointer to an ancestor (Myers'
+  // skew-binary jump pointers, -1 past the root) and the bounding box of the frames it skips, so
+  // finding the first frame up the chain that a rectangle does not contain takes O(log n) steps.
+  const depth = new Int32Array(n), jump = new Int32Array(n);
+  const box = new Int32Array(4 * n);   // frames i .. jump[i] (exclusive): bounding box,
+  const boxOff = new Uint8Array(n);    // and whether one of them is off the canvas
+  const link = (i) => {
+    const p = frames[i].requiredFrame, r = frames[i].rect, b = 4 * i;
+    box.set(r, b);
+    boxOff[i] = rectEmpty(r) ? 1 : 0;
+    depth[i] = p < 0 ? 1 : depth[p] + 1;
+    jump[i] = p;
+    const j = p < 0 ? -1 : jump[p];
+    if (j < 0) return;
+    const jj = jump[j];
+    if (depth[p] - depth[j] !== depth[j] - (jj < 0 ? 0 : depth[jj])) return;
+    jump[i] = jj;
+    for (const s of [4 * p, 4 * j]) {
+      box[b] = Math.min(box[b], box[s]); box[b + 1] = Math.min(box[b + 1], box[s + 1]);
+      box[b + 2] = Math.max(box[b + 2], box[s + 2]); box[b + 3] = Math.max(box[b + 3], box[s + 3]);
+    }
+    boxOff[i] |= boxOff[p] | boxOff[j];
+  };
+  // Skia: from `x`, while r contains x's rectangle (an empty one never is), go to x's required
+  // frame. Returns where that stops, or -1 when it runs off the end of the chain.
+  const firstNotContained = (x, r) => {
+    if (rectEmpty(r)) return x;
+    const inside = (b) => r[0] <= box[b] && r[1] <= box[b + 1] && r[2] >= box[b + 2] && r[3] >= box[b + 3];
+    while (x >= 0) {
+      const fr = frames[x].rect;
+      if (!boxOff[x] && inside(4 * x)) x = jump[x];
+      else if (!rectEmpty(fr) && r[0] <= fr[0] && r[1] <= fr[1] && r[2] >= fr[2] && r[3] >= fr[3]) x = frames[x].requiredFrame;
+      else return x;
+    }
+    return -1;
+  };
+  let lastKept = -1; // the latest frame so far that is not "restore previous"
+  const required = (f) => {
     const reportsAlpha = f.transparentIndex >= 0;
     const frameRect = onScreen(f);
-    if (!reportsAlpha && rectEq(frameRect, screen)) { f.requiredFrame = -1; continue; }
-    let prev = frames[i - 1];
-    let done = false;
-    while (prev.dispose === DISPOSE_PREVIOUS) {
-      if (prev.index === 0) { f.requiredFrame = -1; done = true; break; }
-      prev = frames[prev.index - 1];
-    }
-    if (done) continue;
+    if (!reportsAlpha && rectEq(frameRect, screen)) return -1;
+    // Skia steps back over "restore previous" frames; with none left the frame is independent.
+    if (lastKept < 0) return -1;
+    const prev = frames[lastKept];
     const clearPrev = prev.dispose === DISPOSE_BACKGROUND;
-    let prevRect = onScreen(prev);
-    if (clearPrev && (rectEq(prevRect, screen) || prev.requiredFrame === -1)) { f.requiredFrame = -1; continue; }
-    if (reportsAlpha) { f.requiredFrame = prev.index; continue; }
-    while (rectContains(frameRect, prevRect)) {
-      if (prev.requiredFrame === -1) { f.requiredFrame = -1; done = true; break; }
-      prev = frames[prev.requiredFrame];
-      prevRect = onScreen(prev);
-    }
-    if (done) continue;
-    f.requiredFrame = prev.index;
-  }
-  // The frame Blink actually copies from when decoding in order: the latest earlier frame that
-  // is not "restore previous", if that is later than the required frame (Skia then skips the
-  // required frame's disposal); otherwise the required frame itself.
-  let lastKept = -1;
-  for (let i = 0; i < frames.length; i++) {
+    if (clearPrev && (rectEq(onScreen(prev), screen) || prev.requiredFrame === -1)) return -1;
+    if (reportsAlpha) return prev.index;
+    return firstNotContained(prev.index, frameRect);
+  };
+  for (let i = 0; i < n; i++) {
     const f = frames[i];
+    f.rect = clippedRect(f, W, H);
+    f.requiredFrame = i === 0 ? -1 : required(f);
+    link(i);
+    // The frame Blink actually copies from when decoding in order: the latest earlier frame that
+    // is not "restore previous", if that is later than the required frame (Skia then skips the
+    // required frame's disposal); otherwise the required frame itself.
     f._prior = (f.requiredFrame >= 0 && lastKept > f.requiredFrame) ? lastKept : -1;
     if (f.dispose !== DISPOSE_PREVIOUS) lastKept = i;
   }
@@ -369,13 +394,25 @@ const LZW_OUT_OF_DATA = 3;  // ran out of compressed data
 // take the same path; the clear and end codes have length 0.
 const entryPos = new Int32Array(4096);
 const entryLen = new Uint16Array(4096);
-const LZW_SLACK = 4400; // out needs npix + LZW_SLACK bytes: overshoot, 8-byte copies, literal table
+const LZW_SLACK = 4400; // out needs room for the indices + LZW_SLACK bytes: overshoot, 8-byte copies, literal table
 let lzwStatus = 0, lzwAnyOutput = false;
 let dvTarget = null, dvView = null;
 
+// The most indices `len` bytes of LZW data can produce: every code takes at least lw + 1 bits,
+// and the k-th code after a clear stands for at most k indices (4096 once the table is full).
+function lzwOutputBound(len, lw) {
+  const codes = Math.floor((len * 8) / (lw + 1));
+  return codes <= 4096 ? (codes * (codes + 1)) / 2 : (4096 * 4097) / 2 + (codes - 4096) * 4096;
+}
+
+// A frame's indices are kept in one buffer while it decodes; past this many (the largest canvas
+// compositeFrames accepts) the frame is refused. It also keeps buffer offsets in int32 range.
+const MAX_FRAME_INDICES = 0x7fffffff >> 2;
+
 /**
- * Decode LZW data into `out` (length >= npix + LZW_SLACK); returns the number of indices
- * written, which may exceed npix by up to 4096. Sets lzwStatus and lzwAnyOutput.
+ * Decode LZW data into `out` (length >= min(npix, lzwOutputBound(srcLen, lw)) + LZW_SLACK);
+ * returns the number of indices written, which may exceed npix by up to 4096. Sets lzwStatus
+ * and lzwAnyOutput.
  */
 function lzwDecode(src, srcLen, lw, out, npix) {
   const clear = 1 << lw, eoi = clear + 1;
@@ -502,20 +539,16 @@ function gatherFrameData(bytes, frame) {
 }
 
 /**
- * Run LZW for one frame. Returns { indices (stream order, length >= npix), decoded, ok, problem }.
+ * Run LZW for one frame. Returns { indices (stream order, length >= decoded), decoded, ok, problem }.
  * `ok` follows Wuffs/Chromium: the frame decodes successfully.
  */
 function decodeFrameData(bytes, frame) {
   const npix = frame.width * frame.height;
-  const need = npix + LZW_SLACK;
-  if (indexScratch.length < need) indexScratch = new Uint8Array(Math.max(need, Math.min(indexScratch.length * 2, need * 2)));
-  const out = indexScratch;
-  const res = { indices: out, decoded: 0, ok: false, problem: null, maxIndex: -1 };
+  const res = { indices: indexScratch, decoded: 0, ok: false, problem: null, maxIndex: -1 };
   const lw = frame.lzwMinCodeSize;
   if (frame._paletteTruncated || lw < 0) { res.problem = 'the file ends before its image data'; return res; }
   if (lw > 8) { res.problem = `its LZW minimum code size is ${lw} (the maximum is 8)`; return res; }
   const len = gatherFrameData(bytes, frame);
-  let op;
   if (npix === 0) {
     // Empty frame: no pixels, but Wuffs still validates the LZW stream.
     lzwValidate(dataScratch, len, lw);
@@ -531,7 +564,14 @@ function decodeFrameData(bytes, frame) {
     res.ok = true;
     return res;
   }
-  op = lzwDecode(dataScratch, len, lw, out, npix);
+  // Size the buffer by what the data can produce, not by the frame's stated size: frames after
+  // the first may claim to be far larger than the canvas (65535×65535 in a 100-byte file).
+  const cap = Math.min(npix, lzwOutputBound(len, lw));
+  if (cap > MAX_FRAME_INDICES) throw gifError(`Frame ${frame.index} of the GIF is too large to decode (${frame.width}×${frame.height}).`, 'too-large');
+  const need = cap + LZW_SLACK;
+  if (indexScratch.length < need) indexScratch = new Uint8Array(Math.max(need, Math.min(indexScratch.length * 2, need * 2)));
+  const out = res.indices = indexScratch;
+  const op = lzwDecode(dataScratch, len, lw, out, npix);
   // Highest index used, only needed when the colour table is smaller than the code space.
   const palN = (frame.palette.length / 3) | 0;
   if (palN > 0 && palN < (1 << lw)) {

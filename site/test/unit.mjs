@@ -178,4 +178,79 @@ test('the GIF reader reads the test GIF', () => {
   }
 });
 
+// a GIF with a two-colour palette whose frames each hold one pixel of index 0
+function makeGif(w, h, frames) {
+  const b = [...'GIF89a'].map((c) => c.charCodeAt(0));
+  const u16 = (v) => b.push(v & 255, v >> 8);
+  u16(w); u16(h); b.push(0x80, 0, 0, 0, 0, 0, 255, 255, 255);
+  for (const f of frames) {
+    b.push(0x21, 0xf9, 4, ((f.disposal ?? 0) << 2) | (f.trans ? 1 : 0), 10, 0, 0, 0);
+    b.push(0x2c); u16(f.x ?? 0); u16(f.y ?? 0); u16(f.w); u16(f.h);
+    b.push(0, 2, 2, 0x44, 0x01, 0);
+  }
+  b.push(0x3b);
+  return new Uint8Array(b);
+}
+
+test('the GIF reader sizes its buffers by the data, not by what a frame claims', () => {
+  // 70 bytes whose second frame claims 65535x65535 pixels: this used to allocate 4 GB, and the
+  // oversized buffer then broke every later decode
+  const before = process.memoryUsage().arrayBuffers;
+  const g = decodeGif(makeGif(1, 1, [{ w: 1, h: 1 }, { w: 65535, h: 65535 }]));
+  assert.deepEqual(g.complete, [true, false]);
+  assert.deepEqual(px(g.frames[0], 1, 0, 0), [0, 0, 0, 255]);
+  assert.ok(process.memoryUsage().arrayBuffers - before < 64e6);
+  assert.equal(decodeGif(readFileSync(new URL('../../tests/data/tiny.gif', import.meta.url))).frames.length, 6);
+});
+
+test('the GIF reader works out which frames build on which in near-linear time', () => {
+  // transparent frames that keep the last, each followed by an opaque "restore previous" frame
+  // inside all of them: walking back frame by frame (as Skia does) took 8 s for these
+  const frames = [];
+  for (let i = 0; i < 40000; i++) frames.push(i % 2 ? { w: 1, h: 1, disposal: 3 } : { w: 1, h: 1, trans: true });
+  const t = performance.now();
+  const info = parseGif(makeGif(2, 1, frames));
+  assert.ok(performance.now() - t < 2000, `took ${Math.round(performance.now() - t)} ms`);
+  assert.equal(info.frames[39998].requiredFrame, 39996);
+  assert.equal(info.frames[39999].requiredFrame, -1);
+});
+
+test('the GIF reader picks the same required frames as Skia', () => {
+  // SkFrameHolder::setAlphaAndRequiredFrame, one frame at a time
+  const skia = (frames, W, H) => {
+    const clip = (f) => {
+      const r = [Math.min(f.left, W), Math.min(f.top, H), Math.min(f.left + f.width, W), Math.min(f.top + f.height, H)];
+      return r[0] < r[2] && r[1] < r[3] ? r : null;
+    };
+    const full = (r) => r && r[0] === 0 && r[1] === 0 && r[2] === W && r[3] === H;
+    const contains = (a, b) => a && b && a[0] <= b[0] && a[1] <= b[1] && a[2] >= b[2] && a[3] >= b[3];
+    const req = [];
+    for (let i = 0; i < frames.length; i++) {
+      const f = frames[i], alpha = f.transparentIndex >= 0, rect = clip(f);
+      req[i] = -1;
+      if (i === 0 || (!alpha && full(rect))) continue;
+      let p = i - 1;
+      while (p >= 0 && frames[p].dispose === 3) p--;
+      if (p < 0 || (frames[p].dispose === 2 && (full(clip(frames[p])) || req[p] === -1))) continue;
+      if (alpha) { req[i] = p; continue; }
+      while (p >= 0 && contains(rect, clip(frames[p]))) p = req[p];
+      req[i] = p;
+    }
+    return req;
+  };
+  let seed = 7;
+  const rnd = (n) => ((seed = (Math.imul(seed, 1103515245) + 12345) >>> 0) >>> 8) % n;
+  for (let c = 0; c < 3000; c++) {
+    const W = 1 + rnd(4), H = 1 + rnd(4);
+    const shapes = [[0, 0, W, H], [0, 0, 1, 1], null];
+    const usual = rnd(3); // repeating one shape builds long chains
+    const frames = Array.from({ length: 1 + rnd(30) }, () => {
+      const s = shapes[rnd(2) ? usual : rnd(3)] || [rnd(W + 1), rnd(H + 1), rnd(W + 1), rnd(H + 1)];
+      return { x: s[0], y: s[1], w: s[2], h: s[3], disposal: rnd(5), trans: rnd(2) === 1 };
+    });
+    const info = parseGif(makeGif(W, H, frames));
+    assert.deepEqual(info.frames.map((f) => f.requiredFrame), skia(info.frames, info.width, info.height), `case ${c}`);
+  }
+});
+
 console.log(`${passed} tests passed${process.exitCode ? ', some failed' : ''}`);

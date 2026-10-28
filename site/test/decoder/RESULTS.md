@@ -60,6 +60,11 @@ decodeFrameIndices(bytesOrParsed, i) // raw palette indices of one frame (not co
 - **Damaged frames:** Chrome's ImageDecoder rejects them. We return what could be decoded, composited the way Chrome composites partial frames, and set `complete[i] = false` with a warning. Frames built on a damaged frame are returned the same way.
 - **Files where nothing can be decoded:** we throw ("The GIF has no decodable frame (...). Chrome cannot display it either.").
 
+## Limits on hostile files
+
+- **Frames that claim more pixels than they hold:** a frame after the first can claim to be 65535×65535 on a tiny canvas. Its index buffer is sized by what its LZW data can produce, so a 70-byte file costs kilobytes, not gigabytes. Only a frame whose data really decodes to more than 536,870,911 indices (the largest canvas we accept) is refused with `too-large`. Chrome streams such a frame through a canvas-sized buffer and shows it; this decoder keeps a frame's indices in memory, so it cannot.
+- **Long frame chains:** required frames are worked out in O(n log n). Skia walks back one frame at a time, which is quadratic: 40,000 frames that alternate between keeping and restoring took 8 s to parse, and now take 40 ms. `unit.mjs` checks the results against a direct port of Skia's loop.
+
 ## Speed (`bench.mjs`; output megapixels per second, median of 7; 4-vCPU Xeon 2.8 GHz VM)
 
 | file | MP | Node | Chromium page, ours | ImageDecoder decode | ImageDecoder + copyTo RGBA |
