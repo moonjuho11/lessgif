@@ -43,9 +43,11 @@ dependencies. Settings are in `site.config.json`:
 - `assets/mp4mux.js`: an MP4 writer for GIF to MP4. The browser's own video encoder (WebCodecs)
   makes H.264, or VP9 where H.264 isn't available, and each GIF frame becomes one video frame
   with its own duration.
-- `assets/fonts/`: IBM Plex Mono, the site's font for headings, labels and numbers (SIL Open Font
-  License, see `OFL-IBM-Plex-Mono.txt`), and Anton, the meme font of the add-text tool (SIL Open
+- `assets/fonts/`: IBM Plex Mono, the site's font for labels, numbers and code (SIL Open Font
+  License, see `OFL-IBM-Plex-Mono.txt`; headings and text use the system sans-serif), and Anton, the meme font of the add-text tool (SIL Open
   Font License, see `OFL.txt`).
+- `assets/theme.js`: applies a saved light-theme choice before the page draws (dark is the
+  default; the toggle in the top bar is wired up in `assets/site.js`).
 - `assets/tools/*.js`: one small script per page.
 
 Each tool keeps every frame in memory as RGBA, so the browser version limits the total number
