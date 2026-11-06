@@ -430,6 +430,19 @@ fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
 .meter.me i { background: var(--accent); }
 .meter.me b { color: var(--accent-text); }
 
+/* examples: GIFs side by side */
+.compare { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.compare.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 720px) { .compare, .compare.two { grid-template-columns: minmax(0, 1fr); } }
+.compare figure { margin: 0; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow); }
+.compare .frame { background: #000; line-height: 0; }
+.compare img { display: block; width: 100%; height: auto; }
+.compare figcaption { display: flex; flex-direction: column; gap: 2px; padding: 10px 14px 12px; color: var(--muted); font: 0.8125rem/1.4 var(--mono); border-top: 1px solid var(--line); }
+.compare figcaption b { color: var(--fg); font: 500 0.9375rem/1.3 var(--sans); }
+.compare figure.me { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), var(--shadow); }
+.compare figure.me figcaption b { color: var(--accent-text); }
+.compare + .hint { margin-top: 12px; }
+
 /* download page */
 .dl { display: grid; grid-template-columns: minmax(0, 1fr); border: 1px solid var(--line); border-radius: var(--radius-lg); overflow: hidden; background: var(--card); }
 .dl a {

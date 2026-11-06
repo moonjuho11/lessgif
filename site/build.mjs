@@ -118,6 +118,8 @@ cpSync(join(here, 'assets'), join(out, 'assets'), { recursive: true });
 cpSync(join(root, 'web', 'lessgif.js'), join(out, 'assets', 'lessgif.js'));
 cpSync(wasm, join(out, 'assets', 'lessgif.wasm'));
 cpSync(join(here, 'static'), out, { recursive: true });
+// the side-by-side GIFs of the README, shown on the examples page
+cpSync(join(root, 'docs', 'compare'), join(out, 'examples'), { recursive: true });
 writeFileSync(join(out, '_headers'), readFileSync(join(out, '_headers'), 'utf8').replace(/\{\{csp\}\}/g, csp));
 
 writeFileSync(join(out, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>

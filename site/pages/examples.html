@@ -1,0 +1,41 @@
+<!-- {"path": "examples/",
+  "title": "Example GIFs: lessgif against ffmpeg, gifski and gifsicle",
+  "description": "The same clips made into GIFs by ffmpeg, gifski and lessgif, side by side, with file sizes and SSIMULACRA2 quality scores."} -->
+<p class="eyebrow">Side by side · same clips, same size on screen</p>
+<h1>Example GIFs</h1>
+<p class="lead">The same clips turned into GIFs by ffmpeg, gifski and lessgif. The score is SSIMULACRA2 against the source frames (higher is better), so no lessgif GIF here is a lower-quality copy. Up close, lessgif's GIFs show a little more fine grain in flat areas; judge the trade for yourself.</p>
+
+<h2 class="sec">Cartoon: Big Buck Bunny</h2>
+<div class="compare">
+    <figure><div class="frame"><img src="{{root}}examples/bunny-ffmpeg.gif" width="360" height="202" loading="lazy" decoding="async" alt="ffmpeg"></div><figcaption><b>ffmpeg</b>1,181 KB · score 76.5</figcaption></figure>
+    <figure><div class="frame"><img src="{{root}}examples/bunny-gifski.gif" width="360" height="202" loading="lazy" decoding="async" alt="gifski"></div><figcaption><b>gifski</b>824 KB · score 76.0</figcaption></figure>
+    <figure class="me"><div class="frame"><img src="{{root}}examples/bunny-lessgif.gif" width="360" height="202" loading="lazy" decoding="async" alt="lessgif"></div><figcaption><b>lessgif</b>490 KB · score 76.6</figcaption></figure>
+</div>
+<p class="hint"><b class="saving">41% smaller than gifski, 59% smaller than ffmpeg</b></p>
+
+<h2 class="sec">Live action: Tears of Steel</h2>
+<div class="compare">
+    <figure><div class="frame"><img src="{{root}}examples/steel-ffmpeg.gif" width="360" height="150" loading="lazy" decoding="async" alt="ffmpeg"></div><figcaption><b>ffmpeg</b>1,461 KB · score 83.8</figcaption></figure>
+    <figure><div class="frame"><img src="{{root}}examples/steel-gifski.gif" width="360" height="150" loading="lazy" decoding="async" alt="gifski"></div><figcaption><b>gifski</b>671 KB · score 78.7</figcaption></figure>
+    <figure class="me"><div class="frame"><img src="{{root}}examples/steel-lessgif.gif" width="360" height="150" loading="lazy" decoding="async" alt="lessgif"></div><figcaption><b>lessgif</b>403 KB · score 83.9</figcaption></figure>
+</div>
+<p class="hint"><b class="saving">40% smaller than gifski, 72% smaller than ffmpeg</b></p>
+
+<h2 class="sec">Screen recording: this website</h2>
+<div class="compare">
+    <figure><div class="frame"><img src="{{root}}examples/screen-ffmpeg.gif" width="360" height="202" loading="lazy" decoding="async" alt="ffmpeg"></div><figcaption><b>ffmpeg</b>663 KB · score 92.8</figcaption></figure>
+    <figure><div class="frame"><img src="{{root}}examples/screen-gifski.gif" width="360" height="202" loading="lazy" decoding="async" alt="gifski"></div><figcaption><b>gifski</b>529 KB · score 81.6</figcaption></figure>
+    <figure class="me"><div class="frame"><img src="{{root}}examples/screen-lessgif.gif" width="360" height="202" loading="lazy" decoding="async" alt="lessgif"></div><figcaption><b>lessgif</b>437 KB · score 92.8</figcaption></figure>
+</div>
+<p class="hint"><b class="saving">17% smaller than gifski, 34% smaller than ffmpeg</b></p>
+
+<h2 class="sec">Re-compressing a GIF: ffmpeg's GIF from the first row</h2>
+<div class="compare">
+    <figure><div class="frame"><img src="{{root}}examples/bunny-ffmpeg.gif" width="360" height="202" loading="lazy" decoding="async" alt="input (ffmpeg)"></div><figcaption><b>input (ffmpeg)</b>1,181 KB</figcaption></figure>
+    <figure><div class="frame"><img src="{{root}}examples/bunny-regif-gifsicle.gif" width="360" height="202" loading="lazy" decoding="async" alt="gifsicle -O3 --lossy=35"></div><figcaption><b>gifsicle -O3 --lossy=35</b>936 KB · score 75.4</figcaption></figure>
+    <figure class="me"><div class="frame"><img src="{{root}}examples/bunny-regif-lessgif.gif" width="360" height="202" loading="lazy" decoding="async" alt="lessgif"></div><figcaption><b>lessgif</b>508 KB · score 76.2</figcaption></figure>
+</div>
+<p class="hint"><b class="saving">46% smaller than gifsicle</b></p>
+
+<p class="hint">Big Buck Bunny © 2008 Blender Foundation, <a href="https://peach.blender.org">bigbuckbunny.org</a>; Tears of Steel © 2012 Blender Foundation, <a href="https://mango.blender.org">mango.blender.org</a>; both CC BY 3.0. The GIFs are the ones in the <a href="{{repo}}#benchmark">project's README</a>, and <a href="{{repo}}/blob/main/bench/showcase.py">bench/showcase.py</a> makes them all again.</p>
+<div class="actions"><a class="btn big" href="{{root}}video-to-gif/">Make your own GIF</a><a class="btn big secondary" href="{{root}}compress/">Compress a GIF</a></div>

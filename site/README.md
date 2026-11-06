@@ -14,7 +14,8 @@ python3 -m http.server -d site/dist  # then open http://localhost:8000
 ```
 
 `site/build.mjs` wraps each page in `pages/` with `layout.html`, copies `assets/` and
-`static/`, adds the encoder from `web/`, and writes `sitemap.xml` and `robots.txt`. It has no
+`static/`, adds the encoder from `web/` and the README's side-by-side GIFs from `docs/compare/`
+(shown on the examples page), and writes `sitemap.xml` and `robots.txt`. It has no
 dependencies. Settings are in `site.config.json`:
 
 - `baseUrl`: the address the site will live at, used for search engines (the `LESSGIF_BASE_URL`
