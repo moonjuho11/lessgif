@@ -4,7 +4,7 @@
 <div class="intro">
   <div>
     <p class="eyebrow">Open-source GIF encoder · runs in your browser</p>
-    <h1>Make and compress GIFs in your browser</h1>
+    <h1>Make and compress GIFs <span class="hl">in your browser</span></h1>
     <p class="lead">Turn videos into GIFs, and compress, resize, crop and edit the GIFs you have. Nothing is uploaded: the lessgif encoder runs on your device as WebAssembly.</p>
     <div id="tool"></div>
   </div>
@@ -37,6 +37,13 @@
   <li><a href="split/"><b>Split into frames</b><span>Every frame as a PNG or JPG</span></a></li>
   <li><a href="gif-to-mp4/"><b>GIF to MP4</b><span>A video, usually far smaller</span></a></li>
 </ol>
+
+<h2 class="sec">Examples</h2>
+<div class="compare two">
+    <figure><div class="frame"><img src="examples/bunny-gifski.gif" width="360" height="202" loading="lazy" decoding="async" alt="gifski"></div><figcaption><b>gifski</b>824 KB · score 76.0</figcaption></figure>
+    <figure class="me"><div class="frame"><img src="examples/bunny-lessgif.gif" width="360" height="202" loading="lazy" decoding="async" alt="lessgif"></div><figcaption><b>lessgif</b>490 KB · score 76.6</figcaption></figure>
+</div>
+<p class="hint">The same Big Buck Bunny clip at the same quality: lessgif's GIF is 41% smaller. <a href="examples/">See all the examples</a>, including live action, a screen recording and re-compressing a GIF.</p>
 
 <h2 class="sec">Benchmark</h2>
 <div class="bench">
