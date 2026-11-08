@@ -14,7 +14,7 @@ python3 -m http.server -d site/dist  # then open http://localhost:8000
 ```
 
 `site/build.mjs` wraps each page in `pages/` with `layout.html`, copies `assets/` and
-`static/`, adds the encoder from `web/`, and writes `sitemap.xml` and `robots.txt`. It has no
+`static/`, adds the encoder from `web/`, and writes `sitemap.xml`, `robots.txt` and `llms.txt`. It has no
 dependencies. Settings are in `site.config.json`:
 
 - `baseUrl`: the address the site will live at, used for search engines (the `LESSGIF_BASE_URL`
@@ -25,6 +25,21 @@ dependencies. Settings are in `site.config.json`:
   build adds the AdSense script, fills the three ad spaces (`top`, `result` beside each tool's
   result, and `side` on wide screens), writes `ads.txt`, and switches the privacy page to its
   advertising text. Add `?ads=preview` to any page's address to see where the ads go.
+
+## Search engines and AI assistants
+
+- Each page's `title` and `description` (in its JSON header comment) are what search results
+  show, so they lead with the words people search for ("GIF compressor", "video to GIF").
+- The build adds schema.org structured data to every page as JSON-LD: `SoftwareApplication` on
+  the home and download pages, `WebApplication` and a breadcrumb on each tool page, and a
+  `FAQPage` made from the questions in a page's `<section class="... faq">` (every `<h2>` or
+  `<h3>` ending in "?", answered by the paragraphs under it). Name new tool pages in
+  `TOOL_NAMES` in `build.mjs`.
+- `llms.txt` (from the template of that name) summarises the site for AI assistants and lists
+  every page with its description.
+- `pages/gif-compressor-comparison.html` is the benchmark page against gifski, gifsicle and
+  ffmpeg, with the GIFs from `docs/compare/`. It says up front that the lessgif project wrote
+  it; keep its numbers in step with the main README's benchmark.
 
 ## How it fits together
 

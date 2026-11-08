@@ -1,0 +1,105 @@
+<!-- {"path": "gif-compressor-comparison/",
+  "title": "Best GIF compressor? lessgif vs gifski, gifsicle and ffmpeg, measured | lessgif",
+  "description": "A reproducible GIF compressor benchmark: 363 video clips and 281 GIFs encoded by lessgif, gifski, gifsicle and ffmpeg and scored with SSIMULACRA2. File sizes, side-by-side GIFs, speed and caveats.",
+  "article": "GIF compressor comparison: lessgif vs gifski, gifsicle and ffmpeg",
+  "updated": "2026-11-08"} -->
+<section class="prose">
+<h1>GIF compressor comparison: lessgif vs gifski, gifsicle and ffmpeg</h1>
+<p class="lead">Which tool makes the smallest GIF that still looks good? We measured it on 363 video clips and 281 existing GIFs, scoring every result with the same perceptual quality metric.</p>
+<p class="note"><b>Who wrote this:</b> this page is written by the people who make lessgif, so read it as a vendor's benchmark, not an independent review. Every number below comes from scripts and clip lists in the <a href="{{repo}}/tree/main/bench">open-source repository</a>, so anyone can rerun them and check.</p>
+
+<h2>The short answer</h2>
+<ul>
+  <li><b>Smallest GIF at the same quality:</b> in this benchmark, lessgif. From video, its GIFs were a median <b>50% smaller than gifski's</b>; re-compressing GIFs, a median <b>40% smaller than gifsicle's lossy mode</b>, both at the same SSIMULACRA2 score.</li>
+  <li><b>Smoothest flat areas up close:</b> gifski. At the same score, lessgif shows a little more fine grain in skies and walls when zoomed in.</li>
+  <li><b>Already installed and scriptable everywhere:</b> ffmpeg and gifsicle. Both are mature, packaged by most Linux distributions and have many editing options lessgif's command line doesn't.</li>
+  <li><b>Smallest file of all:</b> not a GIF. If the place you post to accepts video, an MP4 is usually far smaller than any GIF; try <a href="../gif-to-mp4/">GIF to MP4</a>.</li>
+</ul>
+
+<h2>Video to GIF: lessgif vs gifski</h2>
+<p>363 three-second clips at 15 fps, scaled to at most 400 pixels: 300 from the Blender open movies <i>Tears of Steel</i> and <i>Big Buck Bunny</i>, 15 from the <i>Sintel</i> trailer and 48 from Xiph.org's standard test sequences. Each clip was encoded by lessgif at 9 settings and by gifski 1.34 at 11 quality levels. Every GIF was decoded and scored with SSIMULACRA2 against the source frames, and the size each encoder needs for a given score was read off that clip's curve.</p>
+</section>
+<div class="table-wrap"><table>
+  <tr><th>SSIMULACRA2 score</th><th>lessgif smaller than gifski (median)</th><th>Clips where lessgif is smaller</th></tr>
+  <tr><td>50 (medium)</td><td>49.8%</td><td>99%</td></tr>
+  <tr><td>60</td><td>49.8%</td><td>100%</td></tr>
+  <tr><td>70 (high)</td><td>50.1%</td><td>100%</td></tr>
+  <tr><td>80</td><td>46.6%</td><td>100%</td></tr>
+</table></div>
+<section class="prose">
+<ul>
+  <li>Measured with a second metric, DSSIM, lessgif is 47.7% smaller at equal quality.</li>
+  <li>By source at score 70: Big Buck Bunny 52%, Tears of Steel 50%, Sintel 56%, Xiph sequences 46%.</li>
+  <li>None of lessgif's encodes has a frame scoring below 0; 3.6% of gifski's do.</li>
+</ul>
+
+<h2>Compressing existing GIFs: lessgif vs gifsicle</h2>
+<p>281 GIFs made from the same footage (by gifski and by ffmpeg with two palette modes), plus generated stickers, memes and screen recordings, were re-compressed by lessgif and by gifsicle 1.94.</p>
+</section>
+<div class="table-wrap"><table>
+  <tr><th>Target</th><th>lessgif smaller than gifsicle (median)</th></tr>
+  <tr><td>The quality gifsicle <code>-O3 --lossy=35</code> reaches</td><td>40.5%</td></tr>
+  <tr><td>Near-lossless (SSIMULACRA2 90)</td><td>11.6%</td></tr>
+  <tr><td>Lossless (quality 100)</td><td>0.3% bigger than gifsicle <code>-O3</code>; all 281 GIFs reproduced exactly</td></tr>
+</table></div>
+
+<section class="prose">
+<h2>See for yourself</h2>
+<p>The same 3-second clip, 360 pixels wide at 15 fps, made by ffmpeg 6.1 (its usual <code>palettegen</code> and <code>paletteuse</code> recipe) and gifski 1.34 at their default settings, and by lessgif at the lowest quality whose GIF scores at least as high as the better of the two. Higher scores are better.</p>
+</section>
+
+<h3>Cartoon: Big Buck Bunny</h3>
+<div class="cmp">
+  <figure><img src="../assets/compare/bunny-ffmpeg.gif" width="360" height="202" loading="lazy" alt="Big Buck Bunny clip encoded by ffmpeg"><figcaption><b>ffmpeg</b> 1,181 KB, score 76.5</figcaption></figure>
+  <figure><img src="../assets/compare/bunny-gifski.gif" width="360" height="202" loading="lazy" alt="Big Buck Bunny clip encoded by gifski"><figcaption><b>gifski</b> 824 KB, score 76.0</figcaption></figure>
+  <figure class="me"><img src="../assets/compare/bunny-lessgif.gif" width="360" height="202" loading="lazy" alt="Big Buck Bunny clip encoded by lessgif"><figcaption><b>lessgif</b> 490 KB, score 76.6</figcaption></figure>
+</div>
+
+<h3>Live action: Tears of Steel</h3>
+<div class="cmp">
+  <figure><img src="../assets/compare/steel-ffmpeg.gif" width="360" height="150" loading="lazy" alt="Tears of Steel clip encoded by ffmpeg"><figcaption><b>ffmpeg</b> 1,461 KB, score 83.8</figcaption></figure>
+  <figure><img src="../assets/compare/steel-gifski.gif" width="360" height="150" loading="lazy" alt="Tears of Steel clip encoded by gifski"><figcaption><b>gifski</b> 671 KB, score 78.7</figcaption></figure>
+  <figure class="me"><img src="../assets/compare/steel-lessgif.gif" width="360" height="150" loading="lazy" alt="Tears of Steel clip encoded by lessgif"><figcaption><b>lessgif</b> 403 KB, score 83.9</figcaption></figure>
+</div>
+
+<h3>Screen recording: this website</h3>
+<div class="cmp">
+  <figure><img src="../assets/compare/screen-ffmpeg.gif" width="360" height="202" loading="lazy" alt="Screen recording encoded by ffmpeg"><figcaption><b>ffmpeg</b> 663 KB, score 92.8</figcaption></figure>
+  <figure><img src="../assets/compare/screen-gifski.gif" width="360" height="202" loading="lazy" alt="Screen recording encoded by gifski"><figcaption><b>gifski</b> 529 KB, score 81.6</figcaption></figure>
+  <figure class="me"><img src="../assets/compare/screen-lessgif.gif" width="360" height="202" loading="lazy" alt="Screen recording encoded by lessgif"><figcaption><b>lessgif</b> 437 KB, score 92.8</figcaption></figure>
+</div>
+
+<h3>Re-compressing ffmpeg's Big Buck Bunny GIF</h3>
+<div class="cmp">
+  <figure><img src="../assets/compare/bunny-ffmpeg.gif" width="360" height="202" loading="lazy" alt="The input GIF, made by ffmpeg"><figcaption><b>input</b> 1,181 KB</figcaption></figure>
+  <figure><img src="../assets/compare/bunny-regif-gifsicle.gif" width="360" height="202" loading="lazy" alt="The input GIF re-compressed by gifsicle"><figcaption><b>gifsicle</b> -O3 --lossy=35: 936 KB, score 75.4</figcaption></figure>
+  <figure class="me"><img src="../assets/compare/bunny-regif-lessgif.gif" width="360" height="202" loading="lazy" alt="The input GIF re-compressed by lessgif"><figcaption><b>lessgif</b> 508 KB, score 76.2</figcaption></figure>
+</div>
+<p class="hint">Big Buck Bunny © 2008 and Tears of Steel © 2012 Blender Foundation, CC BY 3.0.</p>
+
+<section class="prose">
+<h2>Speed</h2>
+<p>Timed on 40 of the clips at about SSIMULACRA2 70, one encode at a time: lessgif took a median 1.45 seconds on one thread. gifski took 1.86 seconds and 3.5 seconds of CPU time, because it runs its stages on several threads.</p>
+
+<h2>What this benchmark doesn't show</h2>
+<ul>
+  <li><b>No blind viewing test yet.</b> The same SSIMULACRA2 score is not proof that people can't tell the GIFs apart. SSIMULACRA2 forgives fine grain more than blur, and lessgif leans on that.</li>
+  <li><b>The test material is mostly film.</b> Phone videos, screen captures and GIFs found on the web may shrink more or less.</li>
+  <li><b>An already-optimised GIF may not get smaller.</b> The <a href="../compress/">compressor</a> then tells you to keep the original.</li>
+  <li><b>Online tools weren't tested.</b> Services such as ezgif run their own settings of encoders like gifsicle; we only compared tools we could run with fixed, published settings.</li>
+</ul>
+</section>
+
+<section class="prose faq">
+  <h2>Questions</h2>
+  <h3>What is the best GIF compressor?</h3>
+  <p>It depends on what you value. For the smallest file at a given perceptual quality, lessgif came out ahead in this benchmark: a median 40% smaller than gifsicle's lossy mode when re-compressing GIFs, and 50% smaller than gifski when making GIFs from video, both at the same SSIMULACRA2 score. gifski gives smoother flat areas up close, and gifsicle and ffmpeg are already installed on many systems. This comparison is published by the lessgif project, and the scripts to rerun it are open source.</p>
+  <h3>How do I compress a GIF without losing quality?</h3>
+  <p>Use lossless re-encoding: at quality 100, lessgif stores every frame exactly as it was, and the compressor tells you if your original is already smaller. For a much smaller file that still looks the same at normal size, quality 90 is near-lossless. Both work in the free <a href="../compress/">GIF compressor</a> in your browser, with nothing uploaded.</p>
+  <h3>Is lessgif better than gifski?</h3>
+  <p>For file size, yes in this test: lessgif's GIFs were a median 50% smaller than gifski 1.34's at the same SSIMULACRA2 score, and smaller on every one of 363 clips at score 70. gifski's GIFs look smoother in flat areas when zoomed in, so if that matters most, gifski is a good choice.</p>
+  <h3>Is lessgif better than gifsicle?</h3>
+  <p>For lossy compression, lessgif's files were a median 40.5% smaller than gifsicle 1.94 <code>-O3 --lossy=35</code> at the same score, and 11.6% smaller near-lossless. For lossless optimisation they are about equal; gifsicle was 0.3% smaller. gifsicle also has many editing commands that lessgif's command line doesn't.</p>
+  <h3>Is lessgif free?</h3>
+  <p>Yes. The website, the app for Windows, macOS and Linux, and the encoder library are free and open source under the MIT or Apache-2.0 license. The website's tools run in your browser, so your files are never uploaded.</p>
+</section>

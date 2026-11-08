@@ -41,6 +41,22 @@ const NAV = [
   ['gif-to-mp4/', 'GIF to MP4'],
 ];
 
+// Each tool page's name as search engines and AI assistants should show it.
+const TOOL_NAMES = {
+  'video-to-gif/': 'Video to GIF converter',
+  'maker/': 'GIF maker',
+  'compress/': 'GIF compressor',
+  'resize/': 'GIF resizer',
+  'crop/': 'GIF cropper',
+  'cut/': 'GIF cutter',
+  'speed/': 'GIF speed changer',
+  'reverse/': 'GIF reverser',
+  'rotate/': 'GIF rotator',
+  'add-text/': 'Add text to GIF',
+  'split/': 'GIF frame splitter',
+  'gif-to-mp4/': 'GIF to MP4 converter',
+};
+
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 // The Content-Security-Policy of every page, sent in a <meta> tag and, on Cloudflare, as a header
@@ -61,6 +77,75 @@ const csp = [
   "base-uri 'none'",
   "form-action 'self'",
 ].join('; ');
+
+// Plain text from a bit of page HTML, for structured data and llms.txt.
+const text = (html) => html.replace(/<[^>]+>/g, '').replace(/\{\{[^}]*\}\}/g, '').replace(/&nbsp;/g, ' ')
+  .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim();
+
+// Questions a page answers: each <h2> or <h3> ending in "?" inside a section with class "faq",
+// with the paragraphs up to the next heading as its answer.
+function faqOf(body) {
+  const out = [];
+  for (const sec of body.matchAll(/<section class="[^"]*\bfaq\b[^"]*">([\s\S]*?)<\/section>/g)) {
+    const parts = sec[1].split(/(?=<h[23][^>]*>)/);
+    for (const part of parts) {
+      const m = part.match(/^<h[23][^>]*>([\s\S]*?)<\/h[23]>([\s\S]*)$/);
+      if (!m) continue;
+      const q = text(m[1]);
+      const a = text(m[2]);
+      if (q.endsWith('?') && a) out.push({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } });
+    }
+  }
+  return out;
+}
+
+// schema.org structured data for a page, as one JSON-LD graph.
+function structuredData(meta, body, path) {
+  const url = `${base}/${path}`;
+  const org = { '@type': 'Organization', '@id': `${base}/#org`, name: 'lessgif', url: `${base}/`, logo: `${base}/favicon.svg`, sameAs: [repoUrl] };
+  const free = { '@type': 'Offer', price: '0', priceCurrency: 'USD' };
+  const graph = [org];
+  const crumbs = [{ '@type': 'ListItem', position: 1, name: 'lessgif', item: `${base}/` }];
+  if (path === '') {
+    graph.push({ '@type': 'WebSite', '@id': `${base}/#site`, name: 'lessgif', url: `${base}/`, description: meta.description, publisher: { '@id': `${base}/#org` } });
+  }
+  if (path === '' || path === 'download/') {
+    graph.push({
+      '@type': 'SoftwareApplication', '@id': `${base}/#app`, name: 'lessgif', url: `${base}/`,
+      description: 'Open-source animated GIF encoder that turns videos into GIFs and compresses existing GIFs. In its published benchmark its GIFs are a median 50% smaller than gifski\'s and 40% smaller than gifsicle\'s lossy output at the same SSIMULACRA2 quality score.',
+      applicationCategory: 'MultimediaApplication', applicationSubCategory: 'GIF encoder and compressor',
+      operatingSystem: 'Windows, macOS, Linux, any modern web browser', softwareVersion: version,
+      downloadUrl: `${base}/download/`, codeRepository: repoUrl, license: 'https://opensource.org/licenses/MIT',
+      isAccessibleForFree: true, offers: free, publisher: { '@id': `${base}/#org` },
+      featureList: NAV.map(([, label]) => label).join(', '),
+    });
+  }
+  if (TOOL_NAMES[path]) {
+    graph.push({
+      '@type': 'WebApplication', '@id': `${url}#app`, name: `${TOOL_NAMES[path]} (lessgif)`, url,
+      description: meta.description, applicationCategory: 'MultimediaApplication',
+      operatingSystem: 'Any; runs in a web browser', browserRequirements: 'Requires JavaScript and WebAssembly',
+      isAccessibleForFree: true, offers: free, publisher: { '@id': `${base}/#org` },
+      featureList: 'Runs in the browser, files are never uploaded, no watermark, no sign-up',
+    });
+  }
+  if (meta.article) {
+    graph.push({
+      '@type': 'TechArticle', '@id': `${url}#article`, headline: meta.article, url, description: meta.description,
+      author: { '@id': `${base}/#org` }, publisher: { '@id': `${base}/#org` },
+      ...(meta.updated ? { dateModified: meta.updated } : {}),
+    });
+  }
+  if (path) {
+    crumbs.push({ '@type': 'ListItem', position: 2, name: TOOL_NAMES[path] || meta.title.replace(/ \| lessgif$/, ''), item: url });
+    graph.push({ '@type': 'BreadcrumbList', itemListElement: crumbs });
+  }
+  const faq = faqOf(body);
+  if (faq.length) graph.push({ '@type': 'FAQPage', '@id': `${url}#faq`, url, mainEntity: faq });
+  // '<' is escaped so the JSON can never close the <script> element early
+  const json = JSON.stringify({ '@context': 'https://schema.org', '@graph': graph }).replace(/</g, '\\u003c');
+  return `<script type="application/ld+json">${json}</script>`;
+}
 
 function adSlot(name) {
   if (!ads) return `<div class="ad ad-${name}" data-ad="${name}" hidden></div>`;
@@ -83,6 +168,8 @@ for (const file of readdirSync(join(here, 'pages')).sort()) {
   const depth = path.split('/').filter(Boolean).length;
   const rel = depth ? '../'.repeat(depth) : './';
   const nav = NAV.map(([p, label]) => `<a href="${rel}${p}"${p === path ? ' aria-current="page"' : ''}>${label}</a>`).join('');
+  // text that only applies with (or without) ads: <!--ads-->...<!--/ads-->, <!--noads-->...<!--/noads-->
+  body = body.replace(ads ? /<!--noads-->[\s\S]*?<!--\/noads-->/g : /<!--ads-->[\s\S]*?<!--\/ads-->/g, '');
   const vars = {
     title: esc(meta.title),
     description: esc(meta.description),
@@ -95,13 +182,11 @@ for (const file of readdirSync(join(here, 'pages')).sort()) {
     year: String(new Date().getUTCFullYear()),
     version: esc(version),
     wasmKB,
-    head: ads ? `<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${esc(ads.client)}" crossorigin="anonymous"></script>` : '',
+    head: structuredData(meta, body, path) + (ads ? `<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${esc(ads.client)}" crossorigin="anonymous"></script>` : ''),
     script: meta.script ? `<script type="module" src="${rel}assets/tools/${meta.script}.js"></script>` : '',
     adsOn: ads ? '1' : '',
     csp,
   };
-  // text that only applies with (or without) ads: <!--ads-->...<!--/ads-->, <!--noads-->...<!--/noads-->
-  body = body.replace(ads ? /<!--noads-->[\s\S]*?<!--\/noads-->/g : /<!--ads-->[\s\S]*?<!--\/ads-->/g, '');
   body = body.replace(/\{\{ad:(\w+)\}\}/g, (_, n) => adSlot(n));
   let html = layout.replace('{{content}}', () => body);
   html = html.replace(/\{\{ad:(\w+)\}\}/g, (_, n) => adSlot(n));
@@ -111,10 +196,12 @@ for (const file of readdirSync(join(here, 'pages')).sort()) {
   const dest = join(out, path, 'index.html');
   mkdirSync(dirname(dest), { recursive: true });
   writeFileSync(dest, html);
-  if (!meta.noindex) pages.push(path);
+  if (!meta.noindex) pages.push({ path, title: meta.title, description: meta.description });
 }
 
 cpSync(join(here, 'assets'), join(out, 'assets'), { recursive: true });
+// the side-by-side GIFs from the README, shown on the comparison page
+cpSync(join(root, 'docs', 'compare'), join(out, 'assets', 'compare'), { recursive: true });
 cpSync(join(root, 'web', 'lessgif.js'), join(out, 'assets', 'lessgif.js'));
 cpSync(wasm, join(out, 'assets', 'lessgif.wasm'));
 cpSync(join(here, 'static'), out, { recursive: true });
@@ -122,9 +209,20 @@ writeFileSync(join(out, '_headers'), readFileSync(join(out, '_headers'), 'utf8')
 
 writeFileSync(join(out, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${pages.map((p) => `  <url><loc>${base}/${p}</loc></url>`).join('\n')}
+${pages.map((p) => `  <url><loc>${base}/${p.path}</loc></url>`).join('\n')}
 </urlset>
 `);
+// Every crawler is welcome, including AI search and assistant crawlers (GPTBot, OAI-SearchBot,
+// ClaudeBot, PerplexityBot, Google-Extended): the site is free tools and public benchmark numbers.
 writeFileSync(join(out, 'robots.txt'), `User-agent: *\nAllow: /\nSitemap: ${base}/sitemap.xml\n`);
+
+// llms.txt (https://llmstxt.org): a plain summary of the site for AI assistants and agents.
+const pageLine = (p) => `- [${p.title.replace(/ \| lessgif$/, '')}](${base}/${p.path}): ${p.description}`;
+const isTool = (p) => TOOL_NAMES[p.path];
+const llms = readFileSync(join(here, 'llms.txt'), 'utf8')
+  .replace('{{tools}}', NAV.map(([p]) => pages.find((q) => q.path === p)).filter(Boolean).map(pageLine).join('\n'))
+  .replace('{{more}}', pages.filter((p) => !isTool(p)).sort((a, b) => (a.path === '' ? -1 : b.path === '' ? 1 : 0)).map(pageLine).join('\n'))
+  .replace(/\{\{base\}\}/g, base).replace(/\{\{repo\}\}/g, repoUrl).replace(/\{\{version\}\}/g, version);
+writeFileSync(join(out, 'llms.txt'), llms);
 if (ads) writeFileSync(join(out, 'ads.txt'), `google.com, ${ads.client.replace(/^ca-/, '')}, DIRECT, f08c47fec0942fa0\n`);
 console.log(`site/dist: ${pages.length} pages for ${base}${ads ? ', ads on' : ''}`);

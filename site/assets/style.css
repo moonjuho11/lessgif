@@ -366,3 +366,13 @@ input[type=color] { width: 52px; height: 36px; padding: 2px; border: 1px solid v
 .texter .tsel.off { opacity: 0.35; }
 .layers { display: flex; flex-wrap: wrap; gap: 6px; }
 .btn.secondary[aria-pressed=true] { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); font-weight: 600; }
+
+/* comparison page: three GIFs side by side */
+.cmp { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 8px 0 18px; }
+.cmp figure { margin: 0; }
+.cmp img { display: block; width: 100%; height: auto; border: 1px solid var(--line); background: var(--soft); }
+.cmp .me img { border-color: var(--accent); }
+.cmp figcaption { font: 400 0.8125rem/1.45 var(--mono); color: var(--muted); margin-top: 6px; }
+.cmp figcaption b { color: var(--fg); font-weight: 600; }
+.cmp .me figcaption b { color: var(--accent); }
+@media (max-width: 640px) { .cmp { grid-template-columns: minmax(0, 1fr); } }
