@@ -1,5 +1,5 @@
 <!-- {"path": "", "script": "home",
-  "title": "lessgif: smaller GIFs, made in your browser",
+  "title": "lessgif: free GIF compressor and video to GIF converter in your browser",
   "description": "Free GIF tools that run in your browser: video to GIF, GIF compressor, resize, crop, cut, speed, reverse, add text, split into frames and GIF to MP4. Nothing is uploaded, and the open-source lessgif encoder makes unusually small GIFs."} -->
 <div class="intro">
   <div>
@@ -53,10 +53,20 @@
     <div class="meter me"><span>lessgif</span><div><i style="width:60%"></i></div><b>60</b></div>
   </section>
 </div>
-<p class="hint">Median file size at the same SSIMULACRA2 score, a perceptual quality metric, with the other tool's size as 100. There has been no blind viewing test yet, and up close lessgif's GIFs show a bit more fine grain in flat areas. <a href="{{repo}}#benchmark">How it was measured</a>.</p>
+<p class="hint">Median file size at the same SSIMULACRA2 score, a perceptual quality metric, with the other tool's size as 100. There has been no blind viewing test yet, and up close lessgif's GIFs show a bit more fine grain in flat areas. <a href="gif-compressor-comparison/">See the full comparison</a>, with side-by-side GIFs and how it was measured.</p>
 {{ad:result}}
 
 <h2 class="sec">Command line</h2>
 <pre><span class="pr">$ </span>lessgif clip.mp4 clip.gif --quality 70
 <span class="pr">$ </span>lessgif big.gif small.gif --max-size 8M</pre>
 <p>The same encoder is an app for Windows, macOS and Linux, with no limits on file size or length. <a href="download/">Download it</a>, or read the code and the benchmark on <a href="{{repo}}">GitHub</a>.</p>
+
+<section class="prose faq">
+  <h2 class="sec">Questions</h2>
+  <h3>Is lessgif free?</h3>
+  <p>Yes. The website, the app for Windows, macOS and Linux, and the encoder are free and open source under the MIT or Apache-2.0 license, with no sign-up and no watermark.</p>
+  <h3>Are my files uploaded?</h3>
+  <p>No. Every tool runs in your browser tab with WebAssembly, so your videos and GIFs never leave your device.</p>
+  <h3>How much smaller are lessgif's GIFs?</h3>
+  <p>In the project's published benchmark, a median 50% smaller than gifski's when making GIFs from video, and 40% smaller than gifsicle's lossy mode when compressing existing GIFs, at the same SSIMULACRA2 quality score. Results vary by GIF, and a GIF that is already well optimised may not shrink.</p>
+</section>
